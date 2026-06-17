@@ -668,6 +668,7 @@
   <symbol id="i-check" viewBox="0 0 24 24"><path d="M5 12.5 10 17.5 19.5 7"/></symbol>
   <symbol id="i-alert" viewBox="0 0 24 24"><path d="M12 3.5 22 20H2L12 3.5Z"/><path d="M12 10v4.5"/><circle cx="12" cy="17.6" r=".4"/></symbol>
   <symbol id="i-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 11v5"/><circle cx="12" cy="8" r=".5"/></symbol>
+  <symbol id="i-help" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M9.6 9.3a2.5 2.5 0 0 1 4.9.7c0 1.7-2.5 2-2.5 3.6"/><circle cx="12" cy="16.6" r=".5"/></symbol>
   <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7.5V12l3 2"/></symbol>
   <symbol id="i-vial" viewBox="0 0 24 24"><path d="M8 3h8M9.5 3v13.5a2.5 2.5 0 0 0 5 0V3M9.5 11h5"/></symbol>
   <symbol id="i-sliders" viewBox="0 0 24 24"><path d="M4 7h11M19 7h1M4 12h3M11 12h9M4 17h7M15 17h5"/><circle cx="16.5" cy="7" r="2"/><circle cx="8.5" cy="12" r="2"/><circle cx="12.5" cy="17" r="2"/></symbol>
@@ -732,6 +733,7 @@
   <header class="top">
     <div class="brand"><svg class="ic"><use href="#i-droplet"/></svg><span>Pool Water Console</span></div>
     <div class="toolbar">
+      <button class="tbtn" id="helpBtn" aria-label="How to use this app" title="How to use"><svg class="ic"><use href="#i-help"/></svg></button>
       <button class="tbtn" id="sndBtn" aria-pressed="true" aria-label="Toggle sound" title="Sound"><svg class="ic"><use href="#i-sound-on"/></svg></button>
       <button class="tbtn" id="installBtn" aria-label="Add to Home Screen" title="Add to Home Screen"><svg class="ic"><use href="#i-install"/></svg></button>
     </div>
@@ -1161,6 +1163,38 @@
     <div class="copy">© 2026 <b>Karl Meves</b> · ERRERLabs · Pool Water Console. Licensed under the <a href="https://www.apache.org/licenses/LICENSE-2.0" target="_blank" rel="noopener">Apache License 2.0</a>. Guidance only — not professional advice.</div>
   </footer>
 
+</div>
+
+<div class="sheet-backdrop" id="welcomeSheet" hidden>
+  <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="welcomeTitle">
+    <button class="sheet-x" id="welcomeClose" aria-label="Close"><svg class="ic"><use href="#i-x"/></svg></button>
+    <h2 id="welcomeTitle"><svg class="ic"><use href="#i-droplet"/></svg> Welcome — dose it right, not twice</h2>
+    <p class="sheet-sub">A no-guesswork console for a backyard pool. Type your test readings and it returns the <b>exact</b> amounts to add, in the right order — plus care, supplies, trends, and fixes. It's tuned out of the box for a <b>21&nbsp;ft above-ground vinyl pool (~10,000&nbsp;gal)</b> on tablet chlorine, but every number adapts to your pool in <b>Pool setup</b> on the Dose tab.</p>
+
+    <div class="sheet-os">
+      <div class="os-h"><svg class="ic"><use href="#i-droplet"/></svg> Who it's for</div>
+      <p class="sheet-note" style="margin-top:0;">Anyone who tests their own water and wants the math done for them — owners of above-ground or small in-ground pools who'd rather add the right dose once than chase the numbers all week. Set your volume, chlorine type, and whether you run a salt cell, and the targets follow.</p>
+    </div>
+
+    <div class="sheet-os">
+      <div class="os-h"><svg class="ic"><use href="#i-sliders"/></svg> How to use it — the six tabs</div>
+      <ol>
+        <li><b>Dose</b> — enter strip or kit readings (or <b>Scan strip</b> from a photo), then tap <b>Show my dose list</b> for an exact, ordered add-list.</li>
+        <li><b>Buy</b> — a season shopping list scaled to your pool, with the cheapest time to buy each item.</li>
+        <li><b>Care</b> — cleaning rhythm, pump runtime, and fill / electricity calculators.</li>
+        <li><b>Plan</b> — this week's outlook (add your ZIP for a live forecast) plus opening, closing, and leak playbooks.</li>
+        <li><b>Trends</b> — log readings to chart them against the safe band and catch drift early.</li>
+        <li><b>Fix-it</b> — a symptom solver and the stubborn mustard-algae playbook.</li>
+      </ol>
+    </div>
+
+    <div class="sheet-os">
+      <div class="os-h"><svg class="ic"><use href="#i-shield"/></svg> Your data stays on your device</div>
+      <p class="sheet-note" style="margin-top:0;">Readings, history, settings, and your ZIP are saved only in this browser (local storage) — nothing is uploaded. <b>Add to Home Screen</b> (the install button, top right) for a full-screen, offline app. Guidance only, not professional advice — confirm large doses with a reliable test kit.</p>
+    </div>
+
+    <div class="btn-row" style="margin-top:4px;"><button class="act btn-primary" id="welcomeStart"><svg class="ic"><use href="#i-droplet"/></svg> Start dosing</button></div>
+  </div>
 </div>
 
 <div class="sheet-backdrop" id="installSheet" hidden>
@@ -2196,6 +2230,13 @@
   function setSndUI(){var b=$("sndBtn");b.classList.toggle("off",!SND.on);b.setAttribute("aria-pressed",SND.on?"true":"false");var u=b.querySelector("use");if(u)u.setAttribute("href",SND.on?"#i-sound-on":"#i-sound-off");}
   $("sndBtn").addEventListener("click",function(){SND.on=!SND.on;try{localStorage.setItem("poolSound",SND.on?"1":"0");}catch(e){}setSndUI();if(SND.on)snd("toggle");});
   setSndUI();
+  function openWelcome(){$("welcomeSheet").hidden=false;snd("tap");}
+  function closeWelcome(){$("welcomeSheet").hidden=true;try{localStorage.setItem("poolWelcomed","1");}catch(e){}}
+  $("helpBtn").addEventListener("click",openWelcome);
+  $("welcomeClose").addEventListener("click",closeWelcome);
+  $("welcomeStart").addEventListener("click",function(){closeWelcome();setTab("dose");});
+  $("welcomeSheet").addEventListener("click",function(e){if(e.target===$("welcomeSheet"))closeWelcome();});
+  (function(){var seen=false;try{seen=localStorage.getItem("poolWelcomed")==="1";}catch(e){}if(!seen)setTimeout(function(){$("welcomeSheet").hidden=false;},450);})();
   function closeSheet(){$("installSheet").hidden=true;}
   $("installBtn").addEventListener("click",function(){$("installSheet").hidden=false;snd("tap");});
   $("installClose").addEventListener("click",closeSheet);
@@ -2203,7 +2244,7 @@
   function closeInfo(){$("infoSheet").hidden=true;}
   $("infoClose").addEventListener("click",closeInfo);
   $("infoSheet").addEventListener("click",function(e){if(e.target===$("infoSheet"))closeInfo();});
-  document.addEventListener("keydown",function(e){if(e.key!=="Escape")return;if(!$("installSheet").hidden)closeSheet();else if(!$("infoSheet").hidden)closeInfo();else if(!$("paneCamera").hidden)showCam(false);});
+  document.addEventListener("keydown",function(e){if(e.key!=="Escape")return;if(!$("welcomeSheet").hidden)closeWelcome();else if(!$("installSheet").hidden)closeSheet();else if(!$("infoSheet").hidden)closeInfo();else if(!$("paneCamera").hidden)showCam(false);});
   $("disclToggle").addEventListener("click",function(){var b=$("disclBody"),open=b.hidden;b.hidden=!open;this.setAttribute("aria-expanded",open?"true":"false");});
 
   /* fill + electricity calculators */
