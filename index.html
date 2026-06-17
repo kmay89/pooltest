@@ -25,10 +25,15 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
 <meta name="description" content="Exact chlorine dosing, water care, and trends for your above-ground pool. Dose it right, not twice." />
+<meta name="author" content="Karl Meves (ERRERLabs)" />
+<meta name="keywords" content="pool chlorine calculator, above-ground pool, chlorine dosing, cyanuric acid, CYA, pool chemistry, water care, pool maintenance" />
+<meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1" />
+<meta name="format-detection" content="telephone=no" />
 <link rel="canonical" href="https://poolwaterconsole.netlify.app/" />
 
 <!-- Open Graph (Messages, iMessage, Facebook, LinkedIn, Slack…) -->
 <meta property="og:type" content="website" />
+<meta property="og:locale" content="en_US" />
 <meta property="og:site_name" content="Pool Water Console" />
 <meta property="og:title" content="Pool Water Console" />
 <meta property="og:description" content="Exact chlorine dosing, water care, and trends for your above-ground pool. Dose it right, not twice." />
@@ -45,6 +50,25 @@
 
 <meta name="application-name" content="Pool Water Console" />
 <meta name="theme-color" content="#072F36" />
+
+<!-- Structured data: helps search engines understand the app -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebApplication",
+  "name": "Pool Water Console",
+  "url": "https://poolwaterconsole.netlify.app/",
+  "description": "Exact chlorine dosing, water care, and trends for your above-ground pool. Dose it right, not twice.",
+  "applicationCategory": "UtilitiesApplication",
+  "operatingSystem": "Any (web browser)",
+  "browserRequirements": "Requires JavaScript",
+  "image": "https://poolwaterconsole.netlify.app/og-image.png",
+  "inLanguage": "en-US",
+  "isAccessibleForFree": true,
+  "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
+  "author": { "@type": "Organization", "name": "ERRERLabs" }
+}
+</script>
 <meta name="color-scheme" content="light" />
 <meta name="apple-mobile-web-app-capable" content="yes" />
 <meta name="mobile-web-app-capable" content="yes" />
@@ -658,6 +682,12 @@
 </style>
 </head>
 <body>
+<noscript>
+  <div style="max-width:560px;margin:14vh auto;padding:28px 22px;font-family:system-ui,-apple-system,sans-serif;color:#0A2227;background:#fff;border:1px solid #D6E2E0;border-radius:18px;box-shadow:0 8px 28px rgba(7,47,54,.07);text-align:center;">
+    <h1 style="font-size:1.4rem;margin:0 0 .4em;">Pool Water Console</h1>
+    <p style="color:#496064;line-height:1.55;margin:0;">This app needs JavaScript to calculate your chlorine dose and care plan. Please enable JavaScript in your browser, then reload the page.</p>
+  </div>
+</noscript>
 <svg width="0" height="0" style="position:absolute" aria-hidden="true">
   <symbol id="i-droplet" viewBox="0 0 24 24"><path d="M12 2.7s-6.5 7-6.5 11.3a6.5 6.5 0 0 0 13 0C18.5 9.7 12 2.7 12 2.7Z"/></symbol>
   <symbol id="i-flask" viewBox="0 0 24 24"><path d="M9 3h6M10 3v6l-5 9a1.2 1.2 0 0 0 1 1.8h12a1.2 1.2 0 0 0 1-1.8l-5-9V3"/><path d="M7.5 14h9"/></symbol>
@@ -1157,6 +1187,7 @@
       <p><b>Handle pool chemicals with care.</b> Always follow the manufacturer's label and safety instructions. Add chemicals to water — never water to chemicals — and <b>never mix products together</b> (especially chlorine and acid), which can release toxic gas. Store them separately, dry, and out of reach of children and pets. Wear gloves and eye protection, and dose with the pump running.</p>
       <p>This tool gives <b>general guidance and estimates</b> for a typical residential pool. It is not professional, medical, or safety advice, and it can't see your actual water. Dosing math assumes your volume and readings are correct — confirm with a reliable test kit, and verify large or unusual doses before adding them. Camera strip-reading is an approximation, not a lab measurement.</p>
       <p>Use at your own risk. ERRERLabs and the author assume no liability for outcomes, damage, or injury arising from use of this tool. When in doubt, consult a licensed pool professional.</p>
+      <p><b>Your privacy.</b> There are no accounts and no analytics. Your readings, history, and settings are stored only in this browser (local storage) and never sent to us. Photos for strip-reading are processed on your device and never uploaded. The only outbound requests are optional: typography from Google Fonts, and — when you tap “Get forecast” — your ZIP to public lookup services (Zippopotam, Open-Meteo) to fetch local weather. Clear your browser data to remove everything.</p>
     </div>
     <div class="copy">© 2026 <b>Karl Meves</b> · ERRERLabs · Pool Water Console. Licensed under the <a href="https://www.apache.org/licenses/LICENSE-2.0" target="_blank" rel="noopener">Apache License 2.0</a>. Guidance only — not professional advice.</div>
   </footer>
