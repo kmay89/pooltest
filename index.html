@@ -2230,13 +2230,15 @@
   function setSndUI(){var b=$("sndBtn");b.classList.toggle("off",!SND.on);b.setAttribute("aria-pressed",SND.on?"true":"false");var u=b.querySelector("use");if(u)u.setAttribute("href",SND.on?"#i-sound-on":"#i-sound-off");}
   $("sndBtn").addEventListener("click",function(){SND.on=!SND.on;try{localStorage.setItem("poolSound",SND.on?"1":"0");}catch(e){}setSndUI();if(SND.on)snd("toggle");});
   setSndUI();
-  function openWelcome(){$("welcomeSheet").hidden=false;snd("tap");}
-  function closeWelcome(){$("welcomeSheet").hidden=true;try{localStorage.setItem("poolWelcomed","1");}catch(e){}}
+  var welcomeTimer=null;
+  function clearWelcomeTimer(){if(welcomeTimer){clearTimeout(welcomeTimer);welcomeTimer=null;}}
+  function openWelcome(){clearWelcomeTimer();$("welcomeSheet").hidden=false;snd("tap");}
+  function closeWelcome(){clearWelcomeTimer();$("welcomeSheet").hidden=true;try{localStorage.setItem("poolWelcomed","1");}catch(e){}}
   $("helpBtn").addEventListener("click",openWelcome);
   $("welcomeClose").addEventListener("click",closeWelcome);
   $("welcomeStart").addEventListener("click",function(){closeWelcome();setTab("dose");});
   $("welcomeSheet").addEventListener("click",function(e){if(e.target===$("welcomeSheet"))closeWelcome();});
-  (function(){var seen=false;try{seen=localStorage.getItem("poolWelcomed")==="1";}catch(e){}if(!seen)setTimeout(function(){$("welcomeSheet").hidden=false;},450);})();
+  (function(){var seen=false;try{seen=localStorage.getItem("poolWelcomed")==="1";}catch(e){}if(!seen)welcomeTimer=setTimeout(function(){welcomeTimer=null;var s=false;try{s=localStorage.getItem("poolWelcomed")==="1";}catch(e){}if(!s)$("welcomeSheet").hidden=false;},450);})();
   function closeSheet(){$("installSheet").hidden=true;}
   $("installBtn").addEventListener("click",function(){$("installSheet").hidden=false;snd("tap");});
   $("installClose").addEventListener("click",closeSheet);
