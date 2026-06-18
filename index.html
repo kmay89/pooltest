@@ -187,7 +187,7 @@
   .modebtn .mb-t{font-family:var(--display);font-weight:700;font-size:.95rem;color:var(--ink);}
   .modebtn .mb-d{font-size:.75rem;color:var(--ink-soft);}
   .modebtn[aria-pressed=true]{border-color:var(--pool);background:#EFF8F8;box-shadow:0 0 0 1px var(--pool);}
-  .modebtn:focus-visible{outline:3px solid rgba(12,140,153,.35);outline-offset:1px;}
+  .modebtn:focus-visible{outline:3px solid var(--pool);outline-offset:1px;}
   .modebtn.slam[aria-pressed=true]{border-color:var(--alert);background:var(--alert-bg);box-shadow:0 0 0 1px var(--alert);}
   .modebtn.slam[aria-pressed=true] .ic,.modebtn.slam[aria-pressed=true] .mb-t{color:var(--alert);}
   .mode-intro{font-size:.9rem;color:var(--ink-soft);margin:0 2px 16px;display:flex;gap:9px;align-items:flex-start;}
@@ -1703,7 +1703,7 @@
     var fc=num("fc"),ph=num("ph"),ta=num("ta"),ch=num("ch"),tc=num("tc");
     var rows=[];
     function add(icn,name,val,unit,status,band){if(val===null)return;rows.push({ic:icn,name:name,val:val+(unit||""),status:status,band:band});}
-    add("droplet","Free chlorine",fc,"",stFc(fc,b),b.nocya?"set CYA for a target":"target "+b.ideal+" · floor "+b.min);
+    add("droplet","Free chlorine",fc,"",b.nocya?"warn":stFc(fc,b),b.nocya?"set CYA for a target":"target "+b.ideal+" · floor "+b.min);
     add("flask","pH",ph,"",stt(ph,T.ph.min,T.ph.max),"7.4–7.8");
     add("scale","Alkalinity",ta," ppm",stt(ta,T.ta.min,T.ta.max),T.ta.min+"–"+T.ta.max+" ppm");
     add("shield","Stabilizer",cya," ppm",stt(cya,T.cya.min,T.cya.max),T.cya.min+"–"+T.cya.max+" ppm");
