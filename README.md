@@ -22,6 +22,11 @@ Set your volume, chlorine type, and whether you run a salt cell, and the targets
 follow automatically. A first-run **welcome tour** (and the `?` button, top-right)
 explains who it's for and how each tab works.
 
+**Easy on the eyes.** The gear button (top-right) opens **Display** settings:
+a **Light / Auto / Dark** appearance toggle (Auto follows your device) and a
+**text-size** slider (80–170%) for larger, more readable type. Both choices are
+remembered on your device, and dark mode applies instantly with no page flash.
+
 ## How to use it — the seven tabs
 
 | Tab | What it does |
