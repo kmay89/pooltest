@@ -6,6 +6,8 @@ plus seasonal supplies, care routines, trends, and fix-it playbooks.
 
 > Live site: **https://poolwaterconsole.netlify.app/**
 
+![Pool Water Console](og-image.png)
+
 It's tuned out of the box for a **21 ft above-ground vinyl pool (~10,000 gal)**
 running tablet chlorine, but every target adapts to your pool from **Pool setup**
 on the Dose tab (volume, chlorine product, salt cell, season).
@@ -33,15 +35,17 @@ explains who it's for and how each tab works.
 
 ## Your data — local only
 
-All persistence is **`localStorage` in your browser**. Readings, history,
-maintenance reminders, settings, and your ZIP are saved **only on your device** —
-nothing is uploaded to a server. Export/import (JSON or CSV) on the Trends tab
-lets you back up or move your history between devices. **Add to Home Screen**
-(the install button) for a full-screen, offline app.
+No accounts, no analytics, no tracking. All persistence is **`localStorage` in
+your browser**: readings, history, maintenance reminders, settings, and your ZIP
+are saved **only on your device** — nothing is uploaded to a server. Strip photos
+are processed on-device. Export/import (JSON or CSV) on the Trends tab lets you
+back up or move your history between devices. **Add to Home Screen** (the install
+button) for a full-screen app.
 
 Two optional features make outbound calls **only when you ask**:
-- **Plan → Get forecast** geocodes your ZIP (Zippopotam.us) and pulls a 7-day
-  outlook (Open-Meteo). No account, no tracking; the ZIP is stored locally.
+- **Plan → Get forecast** geocodes your ZIP ([Zippopotam](https://zippopotam.us/))
+  and pulls a 7-day outlook ([Open-Meteo](https://open-meteo.com/)). No account,
+  no tracking; the ZIP is stored locally.
 - Google Fonts are loaded from a CDN for typography.
 
 Everything else — dosing math, strip color-reading, charts — runs entirely in
@@ -59,38 +63,53 @@ any static file server (or just opening the file locally) works.
 ```
 .
 ├── index.html      # the entire app (HTML + CSS + JS, ~230 KB)
-├── og-image.png    # social share / Open Graph card
-├── netlify.toml    # Netlify deploy + headers config
+├── 404.html        # branded not-found page
+├── og-image.png    # social share / Open Graph card (1200×630)
+├── robots.txt      # crawl directives + sitemap pointer
+├── sitemap.xml     # single-URL sitemap
+├── netlify.toml    # Netlify deploy, security headers, caching
 ├── LICENSE         # Apache-2.0
 └── README.md
 ```
 
 ## Deploying to Netlify
 
-Netlify serves **`index.html` at the site root** — the README does not need to
-be the page; the HTML is. `netlify.toml` pins this down:
+Netlify serves **`index.html` at the site root** — the HTML is the page.
+`netlify.toml` pins down the production config:
 
 - `publish = "."` and an empty `command` — no build, publish the repo root.
-- A `/* → /index.html` 200 rewrite so deep links and Home-Screen launches resolve
-  to the app (it's a single page; the tabs are client-side).
-- Headers: `index.html` is sent `no-cache` so updates ship immediately, while
+- **Security headers** on every route: a scoped Content-Security-Policy,
+  HSTS, `X-Frame-Options: DENY` / `frame-ancestors 'none'`,
+  `X-Content-Type-Options: nosniff`, `Referrer-Policy`, `Permissions-Policy`,
+  and COOP/CORP.
+- **Caching:** `index.html` always revalidates so updates ship immediately;
   `og-image.png` is allowed to cache.
+- **No catch-all rewrite** — the app has no URL-based routing (tabs are
+  client-side), so unknown paths return a real 404 via `404.html`. This keeps
+  the indexable site free of soft-404s.
 
 **To deploy:**
 
 1. Connect this repo to Netlify (or drag the folder into the Netlify UI).
 2. Build command: *(none)* · Publish directory: `.`
-3. Deploy. That's it — `localStorage` works on any HTTPS origin, so memory
-   persists per browser automatically.
+3. Deploy. `localStorage` works on any HTTPS origin, so memory persists per
+   browser automatically.
 
 For local preview, just open `index.html` in a browser, or:
 
 ```bash
-npx serve .       # or: python3 -m http.server
+npx serve .       # or: python3 -m http.server 8000
 ```
 
 > A PWA installs best from a hosted HTTPS URL; opening the raw file is fine for
-> testing but the manifest/offline behavior is most reliable on the deployed site.
+> testing but the manifest behavior is most reliable on the deployed site.
+
+### Regenerating the share image
+
+`og-image.png` (1200×630) is the social-share card. To regenerate it, edit and
+re-run the Pillow script used to create it (see commit history), or replace the
+PNG directly — keep it 1200×630 and re-scrape caches afterward with the
+[Facebook Sharing Debugger](https://developers.facebook.com/tools/debug/).
 
 ---
 

@@ -1,0 +1,5 @@
+# Pool Water Console — https://poolwaterconsole.netlify.app/
+User-agent: *
+Allow: /
+
+Sitemap: https://poolwaterconsole.netlify.app/sitemap.xml
