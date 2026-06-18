@@ -1,5 +1,7 @@
 # Pool Water Console — Netlify configuration
-# Static single-page site; no build step required.
+# Static single-page app: index.html is served from the repo root.
+# No build step — it's one self-contained HTML file with inline CSS/JS,
+# data-URI icons/manifest, and localStorage for all persistence.
 
 [build]
   publish = "."
@@ -22,7 +24,7 @@
     Cross-Origin-Resource-Policy = "same-origin"
 
 # ---- Caching ----
-# Always revalidate the HTML so testers get the latest version.
+# Always revalidate the HTML so testers get the latest version immediately.
 [[headers]]
   for = "/"
   [headers.values]
@@ -33,8 +35,12 @@
   [headers.values]
     Cache-Control = "public, max-age=0, must-revalidate"
 
-# Share image / static assets can be cached for a while.
+# The share image is stable; let it cache.
 [[headers]]
   for = "/og-image.png"
   [headers.values]
     Cache-Control = "public, max-age=604800"
+
+# Note: no catch-all "/* -> /index.html" rewrite. The app has no URL-based
+# routing (tabs are client-side), so unknown paths return a real 404 via
+# 404.html — correct for SEO (avoids soft-404s on the indexable site).
