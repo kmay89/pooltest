@@ -1,0 +1,10 @@
+{
+  "name": "pool-water-console",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Single-file pool water dosing console. Tests certify the dosing math so a refactor can never silently change a real-world dose.",
+  "license": "Apache-2.0",
+  "scripts": {
+    "test": "node --test"
+  }
+}
