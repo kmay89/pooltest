@@ -1436,7 +1436,7 @@
     function sodaAshOz(ph,idealPh,vol){return ((idealPh-ph)/0.2)*6*(vol/10000);}         /* +pH, dry oz */
     function calciumOz(ch,idealCh,vol){return 1.84*(idealCh-ch)*(vol/10000);}            /* +CH, dry oz */
     function cyaOz(cya,idealCya,vol){return ((idealCya-cya)/10)*13*(vol/10000);}         /* +CYA, dry oz */
-    function chlorineOz(deltaFc,product,vol){return deltaFc*CL[product].per*(vol/10000);} /* +FC, product oz */
+    function chlorineOz(deltaFc,product,vol){var p=CL[product];if(!p)throw new Error("Unknown chlorine product: "+product);return deltaFc*p.per*(vol/10000);} /* +FC, product oz */
     function taDrop(acidFlOz,vol){return (acidFlOz/8/(vol/10000))*5;}                    /* TA fall from an acid dose, ppm */
     return {CL:CL,targets:targets,fcBand:fcBand,
       bakingSodaOz:bakingSodaOz,acidOz:acidOz,sodaAshOz:sodaAshOz,
@@ -1456,7 +1456,7 @@
         && Math.abs(DOSE.chlorineOz(2,"liq125",10000)-21)<1e-9
         && DOSE.fcBand(40,false).shock===16;
       if(!ok&&window.console)console.warn("[Pool Console] Dosing self-check FAILED — do not trust the amounts. See tests/dosing.test.mjs.");
-    }catch(e){}
+    }catch(e){if(window.console)console.warn("[Pool Console] Dosing self-check errored:",e);}
   })();
   var saltOn=function(){return $("salt").checked;};
   var SEASON={
@@ -2097,7 +2097,7 @@
     var g=e.target.closest("[data-goto]");if(!g)return;
     setTab(g.getAttribute("data-goto"));snd("tap");
     var sub=g.getAttribute("data-sub");
-    if(sub){var el=$(sub);if(el){if(el.tagName==="DETAILS")el.open=true;setTimeout(function(){el.scrollIntoView({behavior:"smooth",block:"start"});},90);}}
+    if(sub){var el=$(sub);if(el){var pDet=el.closest("details");if(pDet)pDet.open=true;setTimeout(function(){el.scrollIntoView({behavior:"smooth",block:"start"});},90);}}
   });
   function setTab(name){
     document.querySelectorAll(".tabbar button").forEach(function(b){b.setAttribute("aria-selected",b.getAttribute("data-tab")===name?"true":"false");});

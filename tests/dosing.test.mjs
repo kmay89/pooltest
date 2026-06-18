@@ -130,6 +130,13 @@ test("chlorine dose uses the right product strength", () => {
   near(DOSE.chlorineOz(3, "bleach6", 10000), 63);   // weak bleach needs more
 });
 
+test("an unknown chlorine product fails loudly, never as a silent zero dose", () => {
+  // A bad product key must throw, not return 0 — "add nothing" would be a
+  // dangerous, hidden mis-dose. Valid keys are unaffected.
+  assert.throws(() => DOSE.chlorineOz(2, "not_a_product", 10000), /Unknown chlorine product/);
+  near(DOSE.chlorineOz(2, "liq125", 10000), 21);
+});
+
 test("acid also nudges TA down — that side note must stay honest", () => {
   // An 8 fl oz acid dose drops TA ~5 ppm in 10k gal.
   near(DOSE.taDrop(8, 10000), 5);
