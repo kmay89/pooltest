@@ -22,10 +22,11 @@ Set your volume, chlorine type, and whether you run a salt cell, and the targets
 follow automatically. A first-run **welcome tour** (and the `?` button, top-right)
 explains who it's for and how each tab works.
 
-## How to use it — the six tabs
+## How to use it — the seven tabs
 
 | Tab | What it does |
 | --- | --- |
+| **Learn** | A goal launcher (fill / test / winterize / …), a tour of every tool, and a plain-English guide to **why** you test and what each number (FC, CYA, TA, pH, CH) means. |
 | **Dose** | Enter strip/kit readings (or **Scan strip** from a photo) → exact, ordered add-list. |
 | **Buy** | A season shopping list scaled to your pool, with the cheapest time to buy each item. |
 | **Care** | Cleaning rhythm, pump runtime, and fill / electricity calculators. |
@@ -133,6 +134,27 @@ well-established pool-chemistry constants:
 These are guidance estimates — confirm large or unusual doses against a reliable
 drop-test kit before adding. Add chemicals to water (never the reverse), one at a
 time, with the pump running. **Not professional, medical, or safety advice.**
+
+### Certifying the math — regression tests
+
+Because a wrong number here means a real person pours the wrong amount into their
+pool, the dosing math is **locked by tests**. The formulas live in one DOM-free,
+clearly delimited block in `index.html` (between the `DOSE-ENGINE-START` /
+`DOSE-ENGINE-END` markers). The suite in [`tests/dosing.test.mjs`](./tests/dosing.test.mjs)
+extracts *that exact block* from the shipping file, evaluates it, and asserts
+known, hand-checked doses — so an accidental edit that would change any
+real-world amount fails before it can ship. The same golden values are
+re-checked in the browser on load (a one-line console warning if they ever
+drift).
+
+No dependencies, no build step — just Node 18+:
+
+```bash
+node --test        # or: npm test
+```
+
+If you change a constant on purpose, update the expected value in the test in
+the **same commit** — never the other way around.
 
 ---
 
