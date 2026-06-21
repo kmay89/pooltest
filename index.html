@@ -1046,6 +1046,16 @@
               <option value="dichlor">Dichlor granular (56%)</option>
             </select>
           </div>
+          <div class="field" style="grid-column:1/-1;"><label for="shockProduct">Shock you'll use <span class="meta">SLAM &amp; algae</span></label>
+            <select id="shockProduct">
+              <option value="calhypo" selected>Cal-hypo granular (65%) — DryTec</option>
+              <option value="dichlor">Dichlor granular (56%)</option>
+              <option value="liq125">12.5% liquid chlorine</option>
+              <option value="liq10">10% liquid chlorine</option>
+              <option value="bleach825">8.25% household bleach</option>
+              <option value="bleach6">6% household bleach</option>
+            </select>
+          </div>
         </div>
         <div class="toggle-row"><div class="tl"><svg class="ic"><use href="#i-zap"/></svg><div>Saltwater chlorine cell<div class="desc">Shifts CYA target to 60–80 and runs chlorine a bit lower</div></div></div><label class="switch"><input type="checkbox" id="salt" /><span class="track"></span></label></div>
         <div class="seg mt" role="group" aria-label="Season">
@@ -1651,9 +1661,11 @@
   }
 
   /* ---- setup chips, season, cheat ---- */
-  function prodShort(){var m={liq125:"12.5% liquid",liq10:"10% liquid",bleach825:"8.25% bleach",bleach6:"6% bleach",calhypo:"cal-hypo",dichlor:"dichlor"};return m[$("product").value];}
+  var PRODNAMES={liq125:"12.5% liquid",liq10:"10% liquid",bleach825:"8.25% bleach",bleach6:"6% bleach",calhypo:"cal-hypo",dichlor:"dichlor"};
+  function prodShort(){return PRODNAMES[$("product").value];}
+  function shockShort(){return $("shockProduct")?PRODNAMES[$("shockProduct").value]:"cal-hypo";}
   function updateSetupChips(){
-    var c=[(num("vol")||10000).toLocaleString()+" gal",prodShort(),saltOn()?"saltwater cell":"chlorine",season==="open"?"opening":season==="close"?"closing":"summer"];
+    var c=[(num("vol")||10000).toLocaleString()+" gal",prodShort(),"shock: "+shockShort(),saltOn()?"saltwater cell":"chlorine",season==="open"?"opening":season==="close"?"closing":"summer"];
     $("setupChips").innerHTML=c.map(function(x){return"<span>"+x+"</span>";}).join("");
   }
   function updateSeasonTip(){var s=SEASON[season];$("seasonTip").querySelector("use").setAttribute("href","#i-"+s.ic);$("seasonTipTxt").innerHTML=s.txt;}
@@ -2257,11 +2269,11 @@
   $("deconList").addEventListener("click",function(e){var li=e.target.closest("[data-de]");if(li)li.classList.toggle("done");});
 
   function shockText(){
-    var vol=num("vol")||10000,cya=num("cya"),fc=num("fc"),prod=CL[$("product").value];
+    var vol=num("vol")||10000,cya=num("cya"),fc=num("fc"),shockKey=$("shockProduct")?$("shockProduct").value:"calhypo",prod=CL[shockKey];
     if(cya===null)return {prompt:true};
     var slam=r0(cya*0.4),from=fc===null?0:fc,delta=slam-from,out={slam:slam,hiCya:cya>80};
     if(delta<=0){out.line="You're already at or above shock level — just hold "+slam+" ppm.";}
-    else{var oz=DOSE.chlorineOz(delta,$("product").value,vol),f=prod.fluid?fmtFluid(oz):fmtDry(oz,false);out.line="Add <b>"+f.h+"</b> of "+prod.label+(fc===null?" (assuming FC ≈ 0)":" (from your "+fc+")")+" to reach <b>"+slam+" ppm</b>.";out.t=f.t;}
+    else{var oz=DOSE.chlorineOz(delta,shockKey,vol),f=prod.fluid?fmtFluid(oz):fmtDry(oz,false);out.line="Add <b>"+f.h+"</b> of "+prod.label+(fc===null?" (assuming FC ≈ 0)":" (from your "+fc+")")+" to reach <b>"+slam+" ppm</b>.";out.t=f.t;}
     return out;
   }
   function updateMustard(){
@@ -2332,6 +2344,7 @@
   function inputsChanged(){updateSetupChips();updateCheat();updateSupplies();updatePump();updateMustard();paintAllRows();}
   ["vol","product"].forEach(function(id){$(id).addEventListener("input",inputsChanged);});
   $("product").addEventListener("change",inputsChanged);
+  if($("shockProduct"))$("shockProduct").addEventListener("change",inputsChanged);
   $("salt").addEventListener("change",function(){paintScale(num("cya")===null?40:num("cya"));$("sigCya").value=num("cya")===null?$("sigCya").value:num("cya");inputsChanged();});
   $("gpm").addEventListener("input",updatePump);
   $("coverSeg").addEventListener("click",function(e){var b=e.target.closest("[data-cover]");if(!b)return;cover=b.getAttribute("data-cover");document.querySelectorAll("#coverSeg button").forEach(function(x){x.setAttribute("aria-pressed",x===b?"true":"false");});updateSupplies();});
