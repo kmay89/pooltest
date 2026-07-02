@@ -1502,7 +1502,7 @@
         <li><svg class="ic"><use href="#i-sun"/></svg><div><b>Covers cut both ways.</b> A taut cover keeps animals out of the water; a loose one traps them beneath it or drowns them in the rain puddle on top. Glance under and over the cover each time you pull it.</div></li>
         <li><svg class="ic"><use href="#i-droplet"/></svg><div><b>Your pool is nobody's water bowl.</b> Chlorinated water is rough on small wildlife and pets. A plain water station in the shade — refreshed daily like the bee bar — gives everyone a better option than your top step.</div></li>
       </ul>
-      <div class="note-card"><svg class="ic"><use href="#i-wrench"/></svg><div class="txt"><b>Something didn't make it?</b> See <span class="mini-link" data-goto="fixit" style="color:var(--pool);background:rgba(12,140,153,.08);border-color:rgba(12,140,153,.25);">Fix-it · Animal in the pool</span> for safe removal — and the one case (raccoon droppings) where chlorine alone doesn't clear the water.</div></div>
+      <div class="note-card"><svg class="ic"><use href="#i-wrench"/></svg><div class="txt"><b>Something didn't make it?</b> See <span class="mini-link" data-goto="fixit" data-symopen="animal" style="color:var(--pool);background:rgba(12,140,153,.08);border-color:rgba(12,140,153,.25);">Fix-it · Animal in the pool</span> for safe removal — and the one case (raccoon droppings) where chlorine alone doesn't clear the water.</div></div>
     </section>
 
     <section class="card">
@@ -3039,6 +3039,8 @@
       if((mode==="slam"&&num("cya")!==null)||(mode==="monitor"&&num("fc")!==null))setTimeout(runActive,120);}
     var sub=g.getAttribute("data-sub");
     if(sub){var el=$(sub);if(el){var pDet=el.closest("details");if(pDet)pDet.open=true;setTimeout(function(){el.scrollIntoView({behavior:"smooth",block:"start"});},90);}}
+    var so=g.getAttribute("data-symopen");
+    if(so)setTimeout(function(){var b=document.querySelector('#symGrid [data-sym="'+so+'"]');if(b&&b.getAttribute("aria-pressed")!=="true")b.click();},140);
   });
   function setTab(name){
     document.querySelectorAll(".tabbar button").forEach(function(b){b.setAttribute("aria-selected",b.getAttribute("data-tab")===name?"true":"false");});
