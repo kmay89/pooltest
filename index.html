@@ -3085,7 +3085,7 @@
   function updateBorates(){
     var el=$("borOut");if(!el)return;
     var vol=num("vol")||10000,cur=num("borCur"),tgt=num("borTarget");
-    if(cur==null)cur=0;if(tgt==null)tgt=40;tgt=Math.min(50,tgt);
+    if(cur==null||cur<0)cur=0;if(tgt==null)tgt=40;tgt=Math.max(0,Math.min(50,tgt));
     if(tgt<=cur){el.innerHTML='<p class="skip-note" style="margin:2px 0 0;">'+(cur>50?"Above 50 ppm — stop adding; dilution is the only way down.":"Already at or above target — nothing to add.")+'</p>';return;}
     var h;
     if(borProd==="borax"){
