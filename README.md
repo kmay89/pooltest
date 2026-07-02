@@ -198,6 +198,18 @@ time, with the pump running. **Not professional, medical, or safety advice.**
 **`tests/dosing.test.mjs` (golden lock, 27 tests)** asserts known, hand-checked
 doses so no edit can silently change a real-world amount.
 
+**`tests/ui-verification.test.mjs` (display proof, 9 tests, Playwright)**
+drives the real page in Chromium and proves what the user SEES matches the
+engine: an independent re-implementation of the display contract (which step
+kind renders for which reading under the band + tolerance rules) checked
+against 200 seeded scenarios plus an exact band-edge matrix; every rendered
+amount parsed back out of its human formatting and compared to the engine's
+ounces; badges never contradicting the dose list; SLAM, the mustard playbook,
+and the engine band showing the same shock number; what-if previews matching
+effectOf with over-shock warnings; fluid/dry unit grammar; the combined-
+chlorine banner's 0.5-ppm boundary; and zero console errors throughout.
+(Skips cleanly when Playwright/Chromium isn't installed.)
+
 **`tests/verification.test.mjs` (correctness proof, 32 tests, ~25,000
 assertions)** proves the math is right in the first place, three independent
 ways:
