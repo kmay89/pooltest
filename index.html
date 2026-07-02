@@ -918,6 +918,7 @@
   <symbol id="i-x" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></symbol>
   <symbol id="i-share" viewBox="0 0 24 24"><path d="M12 15V4M8.5 7.5 12 4l3.5 3.5"/><path d="M6 12v7a1 1 0 0 0 1 1h10a1 1 0 0 0 1-1v-7"/></symbol>
   <symbol id="i-android" viewBox="0 0 24 24"><path d="M5 12a7 7 0 0 1 14 0v6H5v-6Z"/><path d="M7.5 7 6 5M16.5 7 18 5"/></symbol>
+  <symbol id="i-paw" viewBox="0 0 24 24"><circle cx="6.5" cy="8.5" r="1.6"/><circle cx="12" cy="6.8" r="1.6"/><circle cx="17.5" cy="8.5" r="1.6"/><path d="M12 11.5c3.2 0 5.6 2.3 5.6 4.7 0 1.6-1.2 2.7-2.7 2.7-1.1 0-1.9-.6-2.9-.6s-1.8.6-2.9.6c-1.5 0-2.7-1.1-2.7-2.7 0-2.4 2.4-4.7 5.6-4.7Z"/></symbol>
 </svg>
 
 <div class="wrap">
@@ -1490,6 +1491,20 @@
       </div>
     </section>
 
+    <section class="card" id="wildlifeCard">
+      <div class="card-head"><div class="ttl"><svg class="ic"><use href="#i-paw"/></svg><h2>Wildlife &amp; your pool</h2></div></div>
+      <p class="hint">To everything that hops, buzzes, or waddles, a pool reads as a pond — and steep walls make it a trap. Ten minutes of humane setup keeps visitors alive, and your water cleaner for it.</p>
+      <ul class="cover-points">
+        <li><svg class="ic"><use href="#i-shield"/></svg><div><b>Give everything a way out.</b> An escape ramp (a FrogLog or Critter Skimr, or just a rough board or towel clipped over the edge into the water) turns the pool from a death trap into a detour. Above-ground walls are sheer — fit at least one ramp, two on a big pool. Frogs, toads, mice, chipmunks, even waterlogged bees use them.</div></li>
+        <li><svg class="ic"><use href="#i-net"/></svg><div><b>Check the skimmer first, every warm morning.</b> It's where overnight swimmers end up — usually alive. Lift the basket gently and release amphibians into damp shade; a rinse with plain water helps a chlorine-soaked frog recover.</div></li>
+        <li><svg class="ic"><use href="#i-bug"/></svg><div><b>Bees at the waterline aren't hunting you</b> — they're hauling water home, and they recruit nest-mates to a reliable source. Set a <b>bee bar</b> 20+ feet away (shallow dish, pebbles to stand on, topped up daily) and they re-route within days. Don't swat at the water's edge — that's where stings happen. And <b>never spray a swarm</b>: it's docile, temporary, and a local beekeeper will usually collect it free.</div></li>
+        <li><svg class="ic"><use href="#i-water"/></svg><div><b>Ducks &amp; geese: never feed them.</b> Feeding turns a stopover into residency, and droppings into a sanitizer problem. Keep the cover on when idle, use a motion sprinkler for repeat visitors, and be patient — most move on in days. <b>Ducklings can't climb out</b>: ramp in, herd gently toward it, and let mom do the rest. Legal note: migratory waterfowl and their nests are federally protected — gentle hazing is fine, anything more needs permits.</div></li>
+        <li><svg class="ic"><use href="#i-sun"/></svg><div><b>Covers cut both ways.</b> A taut cover keeps animals out of the water; a loose one traps them beneath it or drowns them in the rain puddle on top. Glance under and over the cover each time you pull it.</div></li>
+        <li><svg class="ic"><use href="#i-droplet"/></svg><div><b>Your pool is nobody's water bowl.</b> Chlorinated water is rough on small wildlife and pets. A plain water station in the shade — refreshed daily like the bee bar — gives everyone a better option than your top step.</div></li>
+      </ul>
+      <div class="note-card"><svg class="ic"><use href="#i-wrench"/></svg><div class="txt"><b>Something didn't make it?</b> See <span class="mini-link" data-goto="fixit" data-symopen="animal" style="color:var(--pool);background:rgba(12,140,153,.08);border-color:rgba(12,140,153,.25);">Fix-it · Animal in the pool</span> for safe removal — and the one case (raccoon droppings) where chlorine alone doesn't clear the water.</div></div>
+    </section>
+
     <section class="card">
       <div class="card-head"><div class="ttl"><svg class="ic"><use href="#i-clip"/></svg><h2>Maintenance minders</h2></div></div>
       <p class="hint">Tap <b>Done</b> when you do each one — this device remembers the date and tells you when it's due again. <span id="minderStoreNote"></span></p>
@@ -1660,6 +1675,7 @@
       <button class="sym" data-sym="stain" aria-pressed="false"><svg class="ic"><use href="#i-flask"/></svg>Stains / color change</button>
       <button class="sym" data-sym="foam" aria-pressed="false"><svg class="ic"><use href="#i-foam"/></svg>Foaming</button>
       <button class="sym" data-sym="scale" aria-pressed="false"><svg class="ic"><use href="#i-gem"/></svg>White scale / crust</button>
+      <button class="sym" data-sym="animal" aria-pressed="false"><svg class="ic"><use href="#i-paw"/></svg>Animal in the pool</button>
     </div>
     <div id="symAnswer"></div>
 
@@ -2995,7 +3011,8 @@
     smell:{icon:"eye",title:"Strong 'chlorine' smell, stings eyes",cause:"That smell is chloramines — a sign FC is too LOW for the load, not too high.",fix:"<p>Raise FC (shock if needed) to burn off the combined chlorine, and check pH is ~7.4–7.6.</p>",myth:"The classic myth backwards: a strong smell means you need <b>more</b> chlorine, not less."},
     stain:{icon:"flask",title:"Stains or color when you add chlorine",cause:"Metals in the fill water (iron, copper) oxidize and stain — common with well water.",fix:"<p>Add a <b>metal sequestrant</b> and avoid copper-based algaecides. Test for metals; a hose pre-filter when topping up helps. Raise chlorine slowly.</p>"},
     foam:{icon:"foam",title:"Foaming on the surface",cause:"Usually leftover algaecide (especially cheap quats) or very low calcium.",fix:"<p>Stop adding algaecide and let it dissipate; run the filter. If calcium is very low, a small bump can help — but it's rarely urgent on vinyl.</p>"},
-    scale:{icon:"gem",title:"White crusty scale / deposits",cause:"High pH, high alkalinity, and high calcium together drop scale out of solution.",fix:"<p>Bring <b>pH and alkalinity</b> down into range first. If calcium is genuinely high, the only real fix is diluting with fresh water.</p>"}
+    scale:{icon:"gem",title:"White crusty scale / deposits",cause:"High pH, high alkalinity, and high calcium together drop scale out of solution.",fix:"<p>Bring <b>pH and alkalinity</b> down into range first. If calcium is genuinely high, the only real fix is diluting with fresh water.</p>"},
+    animal:{icon:"paw",title:"An animal got into the pool",cause:"Pools read as ponds, and steep walls trap what falls in — frogs, mice, ducklings, snakes, the occasional raccoon visit.",fix:"<p><b>Alive:</b> scoop small animals out with the leaf net (gloves for anything with teeth); a snake goes calmly into a bucket swept in with the pole — release everything into damp shade, and rinse amphibians with plain water. Then fit an <b>escape ramp</b> so there's no next time (Care tab, Wildlife).</p><p><b>Dead animal (bird, mouse, frog):</b> gloves on, net it out, double-bag it to the trash, wash up. Then raise FC to your <b>target</b>, run the pump 30+ minutes, and net/clean the skimmer. Most single-animal incidents need nothing more — germs from birds and mice are readily killed at normal chlorine.</p><p><b>The one real exception — raccoon droppings:</b> raccoon feces can carry <em>Baylisascaris</em> roundworm eggs, and <b>chlorine does not kill them</b>. Net the feces out (never vacuum), double-bag everything the net touched or run the net through boiling water, and then either drain-and-scrub the pool or run the filter 24&nbsp;h and <b>replace or thoroughly hot-clean the cartridge, bagging the waste</b>. This is the CDC playbook — worth following exactly, because those eggs infect people.</p>",myth:"“Chlorine sterilizes everything” — almost. It handles birds and mice easily; raccoon roundworm eggs are the exception worth knowing about."}
   };
   function renderSym(key){
     var s=SYM[key],box=$("symAnswer");
@@ -3022,6 +3039,8 @@
       if((mode==="slam"&&num("cya")!==null)||(mode==="monitor"&&num("fc")!==null))setTimeout(runActive,120);}
     var sub=g.getAttribute("data-sub");
     if(sub){var el=$(sub);if(el){var pDet=el.closest("details");if(pDet)pDet.open=true;setTimeout(function(){el.scrollIntoView({behavior:"smooth",block:"start"});},90);}}
+    var so=g.getAttribute("data-symopen");
+    if(so)setTimeout(function(){var b=document.querySelector('#symGrid [data-sym="'+so+'"]');if(b&&b.getAttribute("aria-pressed")!=="true")b.click();},140);
   });
   function setTab(name){
     document.querySelectorAll(".tabbar button").forEach(function(b){b.setAttribute("aria-selected",b.getAttribute("data-tab")===name?"true":"false");});
