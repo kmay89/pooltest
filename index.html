@@ -827,6 +827,9 @@
   .field input[type="date"]{font-family:var(--mono);color:var(--ink);}
   @media (prefers-reduced-motion: reduce){*{transition:none !important;animation:none !important;}}
   @media print{
+    *,*::before,*::after{animation:none !important;transition:none !important;}
+    /* chart draw-in keeps its hidden state in base CSS, so force lines visible on paper */
+    polyline[pathLength]{stroke-dasharray:none !important;stroke-dashoffset:0 !important;}
     /* Always print on a light palette, whatever the on-screen theme. */
     html{color-scheme:light;--bg:#EAF1F0;--card:#FFFFFF;--ink:#0A2227;--ink-strong:#072F36;--ink-soft:#496064;--ink-faint:#7A9095;--line:#D6E2E0;--line-strong:#BFD0CE;--tint:#F2F7F6;--tint-3:#D2DFDD;--input-bg:#FBFDFD;--pool:#0C8C99;--pool-btn:#0C8C99;--good:#1E9D62;--warn:#C97C18;--alert:#CF4631;--mustard:#C9A22B;--amber-ink:#7E4D0F;--good-ink:#16633F;--alert-ink:#A2331F;--mustard-ink:#7A5E0E;}
     body{background:var(--card);}
@@ -837,6 +840,44 @@
     .dose{background:var(--tint) !important;color:#0A2227 !important;-webkit-print-color-adjust:exact;print-color-adjust:exact;}
     .dose .what,.dose .cost{color:#0C8C99 !important;}.dose .prod{color:#496064 !important;}.dose .d-ic{display:none;}
     .why{display:block !important;}.glance{box-shadow:none;}
+  }
+  /* ============ MOTION & VISUAL POLISH ============================
+     Transform/opacity only; everything collapses to ~0ms under
+     prefers-reduced-motion, and print gets no animation at all. */
+  @keyframes tabin{from{opacity:0;transform:translateY(7px);}to{opacity:1;transform:none;}}
+  .tab.active{animation:tabin .26s ease-out both;}
+  @keyframes stepin{from{opacity:0;transform:translateY(9px);}to{opacity:1;transform:none;}}
+  #results .step,#results .glance,#results .order-note,#results .progress,#results .slamhero,#results .slamstep,#results .snaprow,#results .save-row{animation:stepin .34s cubic-bezier(.2,.7,.3,1) both;}
+  @keyframes bob{0%,100%{transform:translateY(0);}50%{transform:translateY(-2px);}}
+  .brand>.ic{animation:bob 3.6s ease-in-out infinite;}
+  @keyframes floaty{0%,100%{transform:translateY(0);}50%{transform:translateY(-4px);}}
+  .empty-note>.ic{animation:floaty 3.2s ease-in-out infinite;}
+  /* live controls glide instead of jump — but track the finger 1:1 during a drag */
+  .sld-fill,.sld-zone,.sld-ghost{transition:width .28s ease,left .28s ease;}
+  .sld-track-wrap:has(input[type=range]:active) .sld-fill,
+  .sld-track-wrap:has(input[type=range]:active) .sld-zone,
+  .sld-track-wrap:has(input[type=range]:active) .sld-ghost{transition:none;}
+  .scale .zone{transition:left .16s ease-out,width .16s ease-out;}
+  .scale .tick{transition:left .16s ease-out;}
+  .signature:has(input[type=range]:active) .scale .zone,
+  .signature:has(input[type=range]:active) .scale .tick{transition:none;}
+  /* pointer-device lift for tappable cards */
+  @media(hover:hover){
+    .golcard,.inv,.sym,.modebtn,.gchip,.tgt{transition:transform .16s ease,box-shadow .16s ease,border-color .16s ease;}
+    .golcard:hover,.inv:hover,.sym:hover,.modebtn:hover{transform:translateY(-2px);box-shadow:0 7px 20px rgba(7,47,54,.10);}
+    .gchip:hover,.tgt:hover{transform:translateY(-1px);}
+  }
+  /* chart line draw-in + dot pop (SVG polylines carry pathLength="1") */
+  @keyframes chartdash{to{stroke-dashoffset:0;}}
+  .bigchart polyline[pathLength],.htfc polyline[pathLength]{stroke-dasharray:1;stroke-dashoffset:1;animation:chartdash .9s ease-out .12s forwards;}
+  .spark-svg polyline[pathLength]{stroke-dasharray:1;stroke-dashoffset:1;animation:chartdash .6s ease-out forwards;}
+  @keyframes dotin{from{opacity:0;transform:scale(.2);}to{opacity:1;transform:scale(1);}}
+  .bigchart circle,.htfc circle{transform-box:fill-box;transform-origin:center;animation:dotin .3s ease-out both;}
+  @media (prefers-reduced-motion: reduce){
+    *,*::before,*::after{animation-duration:.01ms !important;animation-delay:0ms !important;transition-duration:.01ms !important;}
+    /* the older kill switch above uses animation:none, which would strand the
+       chart draw-in at its hidden base state — pin lines visible instead */
+    polyline[pathLength]{stroke-dasharray:none !important;stroke-dashoffset:0 !important;}
   }
 </style>
 </head>
@@ -2310,6 +2351,20 @@
     $("printBtn").addEventListener("click",function(){window.print();});
     $("copyBtn").addEventListener("click",copyPlan);
     if($("planLog"))$("planLog").addEventListener("click",doLogSnap);
+    /* motion: stagger the results in, and count the verdict ring up */
+    var kids=$("results").children,dly=0;
+    for(var ki=0;ki<kids.length;ki++){kids[ki].style.animationDelay=dly+"ms";dly+=55;}
+    var ringEl=$("results").querySelector(".ring");
+    if(ringEl&&!(window.matchMedia&&window.matchMedia("(prefers-reduced-motion: reduce)").matches)){
+      var t0r=null,durR=650,targetP=pctIn;
+      ringEl.style.setProperty("--p","0");
+      requestAnimationFrame(function tickR(now){
+        if(t0r===null)t0r=now;
+        var kk=Math.min(1,(now-t0r)/durR);kk=1-Math.pow(1-kk,3);
+        ringEl.style.setProperty("--p",(targetP*kk).toFixed(1));
+        if(kk<1)requestAnimationFrame(tickR);
+      });
+    }
     updateProgress();
   }
   function updateProgress(){var steps=document.querySelectorAll('#results .step[data-action="1"]');if(!steps.length)return;var done=document.querySelectorAll('#results .step[data-action="1"].done').length,pf=$("pfill"),pl=$("plabel");if(pf)pf.style.width=(done/steps.length*100)+"%";if(pl)pl.textContent=done+" of "+steps.length+" done";}
@@ -2565,12 +2620,15 @@
     var mn=Math.min.apply(null,all)-2,mx=Math.max.apply(null,all)+2;
     if(mx<80)mx=Math.min(86,mx+4); /* keep the swim line in view when close */
     var X=function(i){return padL+(i/n)*(W-padL-padR);},Y=function(v){return padT+(1-(v-mn)/(mx-mn||1))*(H-padT-padB);};
-    var pts=function(arr){var p=X(0).toFixed(1)+","+Y(t0).toFixed(1);for(var i=0;i<arr.length;i++)p+=" "+X(i+1).toFixed(1)+","+Y(arr[i]).toFixed(1);return p;};
-    var h='<svg viewBox="0 0 '+W+' '+H+'" width="100%" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Water temperature forecast, cover on vs off">';
+    var fPts=function(arr){var a=[X(0).toFixed(1)+","+Y(t0).toFixed(1)];for(var i=0;i<arr.length;i++)a.push(X(i+1).toFixed(1)+","+Y(arr[i]).toFixed(1));return a;};
+    var covA=fPts(cov),uncA=fPts(unc);
+    var h='<svg class="htfc" viewBox="0 0 '+W+' '+H+'" width="100%" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Water temperature forecast, cover on vs off">';
+    /* the cover dividend: shade the gap the cover buys you */
+    h+='<polygon points="'+covA.join(" ")+" "+uncA.slice().reverse().join(" ")+'" fill="rgba(12,140,153,.10)"/>';
     if(mx>=78&&mn<=84){var y1=Y(Math.min(84,mx)),y0=Y(Math.max(78,mn));h+='<rect x="'+padL+'" y="'+y1.toFixed(1)+'" width="'+(W-padL-padR)+'" height="'+Math.max(1,y0-y1).toFixed(1)+'" fill="rgba(30,157,98,.10)"/>';}
     if(78>=mn&&78<=mx)h+='<line x1="'+padL+'" y1="'+Y(78).toFixed(1)+'" x2="'+(W-padR)+'" y2="'+Y(78).toFixed(1)+'" stroke="rgba(30,157,98,.55)" stroke-width="1" stroke-dasharray="4 3"/><text x="'+(padL+2)+'" y="'+(Y(78)-3).toFixed(1)+'" font-size="8.5" fill="#1E9D62" font-family="monospace">78\u00b0 swim</text>';
-    h+='<polyline points="'+pts(unc)+'" fill="none" stroke="#7A9095" stroke-width="2" stroke-dasharray="5 3" stroke-linejoin="round" stroke-linecap="round"/>';
-    h+='<polyline points="'+pts(cov)+'" fill="none" stroke="#0C8C99" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>';
+    h+='<polyline points="'+uncA.join(" ")+'" fill="none" stroke="#7A9095" stroke-width="2" stroke-dasharray="5 3" stroke-linejoin="round" stroke-linecap="round"/>';
+    h+='<polyline pathLength="1" points="'+covA.join(" ")+'" fill="none" stroke="#0C8C99" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>';
     h+='<circle cx="'+X(0).toFixed(1)+'" cy="'+Y(t0).toFixed(1)+'" r="3" fill="var(--ink-strong)"/>';
     h+='<circle cx="'+X(n).toFixed(1)+'" cy="'+Y(unc[n-1]).toFixed(1)+'" r="2.8" fill="#7A9095"/><circle cx="'+X(n).toFixed(1)+'" cy="'+Y(cov[n-1]).toFixed(1)+'" r="2.8" fill="#0C8C99"/>';
     var yU=Y(unc[n-1]),yC=Y(cov[n-1]);if(Math.abs(yU-yC)<11){var mid=(yU+yC)/2;yC=mid-5.5;yU=mid+5.5;}
@@ -2794,8 +2852,11 @@
     var by1=Y(b[1]),by0=Y(b[0]);
     var band='<rect x="0" y="'+by1.toFixed(1)+'" width="'+W+'" height="'+Math.max(1,(by0-by1)).toFixed(1)+'" fill="rgba(30,157,98,.13)"/>';
     var last=series[n-1],inb=inBand(k,last.v,last.cya),color=inb?"#1E9D62":"#CF4631";
-    var line=n>1?'<polyline points="'+series.map(function(p,i){return X(i).toFixed(1)+","+Y(p.v).toFixed(1);}).join(" ")+'" fill="none" stroke="#0C8C99" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>':"";
-    return '<svg viewBox="0 0 '+W+' '+H+'" width="'+W+'" height="'+H+'">'+band+line+'<circle cx="'+X(n-1).toFixed(1)+'" cy="'+Y(last.v).toFixed(1)+'" r="2.8" fill="'+color+'"/></svg>';
+    var ptsArr=series.map(function(p,i){return X(i).toFixed(1)+","+Y(p.v).toFixed(1);});
+    var defs='<defs><linearGradient id="sg-'+k+'" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#0C8C99" stop-opacity=".20"/><stop offset="1" stop-color="#0C8C99" stop-opacity="0"/></linearGradient></defs>';
+    var area=n>1?'<path d="M'+ptsArr[0].split(",")[0]+','+(H-3)+' L'+ptsArr.join(" L")+' L'+ptsArr[n-1].split(",")[0]+','+(H-3)+' Z" fill="url(#sg-'+k+')"/>':"";
+    var line=n>1?'<polyline pathLength="1" points="'+ptsArr.join(" ")+'" fill="none" stroke="#0C8C99" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>':"";
+    return '<svg class="spark-svg" viewBox="0 0 '+W+' '+H+'" width="'+W+'" height="'+H+'">'+defs+band+area+line+'<circle cx="'+X(n-1).toFixed(1)+'" cy="'+Y(last.v).toFixed(1)+'" r="2.8" fill="'+color+'"/></svg>';
   }
   function renderDashboard(){
     $("sparkGrid").innerHTML=TPARAMS.map(function(P){
@@ -2822,13 +2883,16 @@
     var by1=Y(b[1]),by0=Y(b[0]);
     var sb='<rect x="0" y="'+by1.toFixed(1)+'" width="'+W+'" height="'+Math.max(1,by0-by1).toFixed(1)+'" fill="rgba(30,157,98,.12)"/><line x1="0" y1="'+by1.toFixed(1)+'" x2="'+W+'" y2="'+by1.toFixed(1)+'" stroke="rgba(30,157,98,.5)" stroke-width="1" stroke-dasharray="4 3"/><line x1="0" y1="'+by0.toFixed(1)+'" x2="'+W+'" y2="'+by0.toFixed(1)+'" stroke="rgba(30,157,98,.5)" stroke-width="1" stroke-dasharray="4 3"/>';
     var evm=evs.map(function(e){var x=X(e.ts).toFixed(1),c=evColor(e.kind);return '<line x1="'+x+'" y1="'+padT+'" x2="'+x+'" y2="'+(H-padB)+'" stroke="'+c+'" stroke-width="1.4" stroke-dasharray="2 3" opacity=".65"/><circle cx="'+x+'" cy="'+padT+'" r="2.6" fill="'+c+'"/>';}).join("");
-    var poly=series.length>1?'<polyline points="'+series.map(function(p){return X(new Date(p.ts).getTime()).toFixed(1)+","+Y(p.v).toFixed(1);}).join(" ")+'" fill="none" stroke="#0C8C99" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>':"";
-    var dots=series.map(function(p){return '<circle cx="'+X(new Date(p.ts).getTime()).toFixed(1)+'" cy="'+Y(p.v).toFixed(1)+'" r="3" fill="'+(inBand(k,p.v,p.cya)?"#1E9D62":"#CF4631")+'" stroke="#fff" stroke-width="1.2"/>';}).join("");
+    var chPts=series.map(function(p){return X(new Date(p.ts).getTime()).toFixed(1)+","+Y(p.v).toFixed(1);});
+    var chDefs='<defs><linearGradient id="bg-grad" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#0C8C99" stop-opacity=".18"/><stop offset="1" stop-color="#0C8C99" stop-opacity="0"/></linearGradient></defs>';
+    var chArea=series.length>1?'<path d="M'+chPts[0].split(",")[0]+','+(H-padB)+' L'+chPts.join(" L")+' L'+chPts[chPts.length-1].split(",")[0]+','+(H-padB)+' Z" fill="url(#bg-grad)"/>':"";
+    var poly=series.length>1?'<polyline pathLength="1" points="'+chPts.join(" ")+'" fill="none" stroke="#0C8C99" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>':"";
+    var dots=series.map(function(p,di){return '<circle style="animation-delay:'+Math.min(900,di*45)+'ms" cx="'+X(new Date(p.ts).getTime()).toFixed(1)+'" cy="'+Y(p.v).toFixed(1)+'" r="3" fill="'+(inBand(k,p.v,p.cya)?"#1E9D62":"#CF4631")+'" stroke="#fff" stroke-width="1.2"/>';}).join("");
     var lab='<text x="'+(W-2)+'" y="'+(by1-3).toFixed(1)+'" text-anchor="end" font-size="9" fill="#1E9D62" font-family="monospace">'+b[1]+'</text><text x="'+(W-2)+'" y="'+(by0+11).toFixed(1)+'" text-anchor="end" font-size="9" fill="#1E9D62" font-family="monospace">'+b[0]+'</text>';
     var d0=new Date(t0).toLocaleDateString(undefined,{month:"numeric",day:"numeric"}),d1=new Date(t1).toLocaleDateString(undefined,{month:"numeric",day:"numeric"});
     var xlab='<text x="'+padL+'" y="'+(H-7)+'" font-size="9" fill="#7A9095" font-family="monospace">'+d0+'</text><text x="'+(W-padR)+'" y="'+(H-7)+'" text-anchor="end" font-size="9" fill="#7A9095" font-family="monospace">'+d1+'</text>';
     var leg='<div class="chart-leg">'+ic("check")+' green = in range · shaded = safe'+(k==="fc"?" (tracks CYA)":k==="cc"?" (lower is better)":"")+(evs.length?' · <b style="color:var(--alert)">|</b> issue <b style="color:var(--pool)">|</b> action':"")+'</div>';
-    return '<svg class="bigchart" viewBox="0 0 '+W+' '+H+'" width="100%" preserveAspectRatio="xMidYMid meet" role="img">'+sb+evm+poly+dots+lab+xlab+'</svg>'+leg;
+    return '<svg class="bigchart" viewBox="0 0 '+W+' '+H+'" width="100%" preserveAspectRatio="xMidYMid meet" role="img">'+chDefs+sb+chArea+evm+poly+dots+lab+xlab+'</svg>'+leg;
   }
   function renderStats(series,k){
     var vals=series.map(function(p){return p.v;}),n=vals.length,latest=vals[n-1];
