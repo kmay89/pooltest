@@ -185,6 +185,66 @@ test("cost per +1 ppm FC: built-in benchmarks and shelf-price checks", () => {
   assert.throws(() => DOSE.costPerPpm("nope", 10000), /Unknown chlorine product/);
 });
 
+test("overnight heat model: saturation pressure and the three loss paths", () => {
+  const close = (got, want, eps = 0.01) => assert.ok(Math.abs(got - want) <= eps, `expected ~${want}, got ${got}`);
+  // Magnus saturation vapor pressure at 84°F ≈ 1.1726 inHg.
+  close(DOSE.psatInHg(84), 1.172631, 1e-4);
+  // Reference night: 346 ft² (21-ft round), 10k gal, 84°F water, 62°F clear
+  // night, 55% RH, 2 mph near-surface wind, 12 h. Hand-computed goldens.
+  const base = { area: 346, vol: 10000, waterF: 84, airF: 62, rh: 0.55, windMph: 2, hours: 12, clear: true };
+  const u = DOSE.nightHeat({ ...base, covered: false });
+  close(u.qEvap, 73.4558);   // evaporation dominates…
+  close(u.qRad, 34.949);     // …then radiation to the clear sky…
+  close(u.qConv, 35.2);      // …then convection.
+  close(u.btu, 596246.86, 5);
+  close(u.dropF, 7.1492);    // ~7°F overnight — matches real uncovered pools
+  close(u.evapGal, 34.8279); // ~0.16" of water gone by morning
+  close(u.evapIn, 0.1615, 1e-3);
+  // Same night with the bubble cover on.
+  const c = DOSE.nightHeat({ ...base, covered: true });
+  close(c.btu, 125653.07, 5);
+  close(c.dropF, 1.5066);    // cover keeps ~5.6°F
+  close(c.evapGal, 1.0448);  // and ~34 gallons
+  // The published "cover cuts heat loss 50–80%" claim falls out of the physics.
+  const reduction = 1 - c.btu / u.btu;
+  assert.ok(reduction > 0.5 && reduction < 0.85, `reduction ${reduction}`);
+  // Muggy air warmer than the water → no evaporative flux, never negative…
+  const muggy = DOSE.nightHeat({ ...base, waterF: 70, airF: 80, rh: 0.9, covered: false });
+  assert.equal(muggy.qEvap, 0);
+  // …and convection is SIGNED: warm air over cool water is a heat GAIN.
+  assert.ok(muggy.qConv < 0);
+  assert.ok(muggy.btu < 0);
+  // Overcast sky radiates less than clear.
+  const cloudy = DOSE.nightHeat({ ...base, clear: false, covered: false });
+  assert.ok(cloudy.qRad < u.qRad);
+});
+
+test("water-temperature forecast: solar days in, cover holds the heat", () => {
+  const close = (got, want, eps = 0.01) => assert.ok(Math.abs(got - want) <= eps, `expected ~${want}, got ${got}`);
+  const env = { area: 346, vol: 10000 };
+  // A sunny July day: 20 MJ/m² sun, 82/61°F, 55% RH, 2 mph, clear night.
+  const july = { hiF: 82, loF: 61, sunMJ: 20, rh: 0.55, windMph: 2, clear: true };
+  // One-day goldens from 78°F, hand-mirrored from the model.
+  close(DOSE.tempForecast(78, [july], { ...env, covered: false })[0], 77.0312);
+  close(DOSE.tempForecast(78, [july], { ...env, covered: true })[0], 81.8109);
+  // A week of that weather: covered pool ends 10–18°F warmer — the classic
+  // "a solar cover buys you 10–15 degrees" claim, derived not asserted.
+  const week = Array(7).fill(july);
+  const unc = DOSE.tempForecast(78, week, { ...env, covered: false });
+  const cov = DOSE.tempForecast(78, week, { ...env, covered: true });
+  const gap = cov[6] - unc[6];
+  assert.ok(gap > 8 && gap < 20, `gap ${gap}`);
+  // Covered stays at or above uncovered every single day.
+  for (let i = 0; i < 7; i++) assert.ok(cov[i] >= unc[i]);
+  // Temps stay clamped to the sane band whatever the inputs.
+  const scorch = Array(14).fill({ hiF: 105, loF: 85, sunMJ: 30, rh: 0.3, windMph: 0.5, clear: true });
+  const hot = DOSE.tempForecast(90, scorch, { ...env, covered: true });
+  assert.ok(Math.max(...hot) <= 95);
+  const frigid = Array(14).fill({ hiF: 40, loF: 25, sunMJ: 2, rh: 0.5, windMph: 5, clear: true });
+  const cold = DOSE.tempForecast(60, frigid, { ...env, covered: false });
+  assert.ok(Math.min(...cold) >= 50);
+});
+
 test("test-resolution tolerances are locked (the anti-annoyance layer)", () => {
   // These decide when the app says "within test tolerance — no dose" instead
   // of prescribing a correction a home test couldn't even verify. Widening

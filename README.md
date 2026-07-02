@@ -39,6 +39,16 @@ Pro tools, all free and client-side:
   $ per +1 ppm FC in *your* pool, judged against going rates (with the CYA
   "baggage cost" of stabilized products called out).
 - **Volume calculator** — round / oval / rectangle with average depth.
+- **Tonight's heat & evaporation** (Care tab) — a physics-based overnight
+  model (ASHRAE-style evaporation, radiation to the night sky, wind-scaled
+  convection) comparing bubble-cover-on vs off: morning water temp, °F and
+  BTU lost, gallons evaporated, and the heater cost to win it back. Tonight's
+  low auto-fills from the Plan-tab forecast.
+- **7-day water-temperature forecast** — enter today's water temp and see
+  where it's heading, covered vs uncovered, charted against the 78° swim
+  line. Uses the live Open-Meteo forecast (daily solar energy, highs/lows,
+  wind, humidity) when fetched, or seasonal averages plus a sunny/mixed/gray
+  picker offline.
 
 ---
 

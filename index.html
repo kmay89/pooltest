@@ -332,6 +332,19 @@
   .pill{font-family:var(--mono);font-size:.62rem;font-weight:600;letter-spacing:.04em;text-transform:uppercase;padding:3px 8px;border-radius:999px;white-space:nowrap;display:inline-flex;align-items:center;gap:4px;}
   .pill .ic{width:12px;height:12px;}
   .pill.alert{background:var(--alert-bg);color:var(--alert);}.pill.warn{background:var(--warn-bg);color:var(--warn);}.pill.good{background:var(--good-bg);color:var(--good);}.pill.info{background:var(--tint);color:var(--pool);}
+  .ht-cmp{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+  @media(max-width:480px){.ht-cmp{grid-template-columns:1fr;}}
+  .ht-box{border:1px solid var(--line);border-radius:12px;padding:12px 13px;background:var(--card);}
+  .ht-box.on{border-color:var(--good-line);background:var(--good-bg);}
+  .ht-box .hb-k{font-family:var(--mono);font-size:.66rem;letter-spacing:.09em;text-transform:uppercase;color:var(--ink-faint);display:flex;align-items:center;gap:6px;}
+  .ht-box .hb-k .ic{width:13px;height:13px;}
+  .ht-box.on .hb-k{color:var(--good-ink);}
+  .ht-box .hb-t{font-family:var(--display);font-weight:700;font-size:1.45rem;margin:4px 0 2px;}
+  .ht-box .hb-row{font-size:.8rem;color:var(--ink-soft);margin-top:3px;}
+  .ht-box .hb-row b{color:var(--ink);}
+  .ht-verdict{margin-top:11px;padding:11px 13px;border-radius:10px;background:var(--tint);border:1px solid var(--line);font-size:.85rem;color:var(--ink-soft);display:flex;gap:9px;align-items:flex-start;}
+  .ht-verdict .ic{color:var(--pool);flex:none;margin-top:1px;}
+  .ht-verdict b{color:var(--ink);}
   .puck-sub{margin:10px 0 2px;padding:12px 13px;border:1px dashed var(--line-strong);border-radius:10px;background:var(--tint);}
   .puck-sub .pk-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
   .puck-sub label{font-size:.8rem;color:var(--ink-soft);font-weight:600;}
@@ -942,6 +955,7 @@
       <button class="golcard" data-goto="plan" data-sub="playOpen"><span class="gi"><svg class="ic"><use href="#i-leaf"/></svg></span><span class="gt">Open for spring</span><span class="gd">The order to bring a cold, just-uncovered pool back to life.</span><span class="gmeta"><svg class="ic"><use href="#i-chevron"/></svg>Plan · Opening</span></button>
       <button class="golcard" data-goto="plan" data-sub="playClose"><span class="gi"><svg class="ic"><use href="#i-snow"/></svg></span><span class="gt">Winterize / close</span><span class="gd">Shut it down so it opens clear instead of swampy next year.</span><span class="gmeta"><svg class="ic"><use href="#i-chevron"/></svg>Plan · Closing</span></button>
       <button class="golcard" data-goto="supplies"><span class="gi"><svg class="ic"><use href="#i-cart"/></svg></span><span class="gt">Stock up for the season</span><span class="gd">A shopping list scaled to your pool, with the cheapest time to buy.</span><span class="gmeta"><svg class="ic"><use href="#i-chevron"/></svg>Buy</span></button>
+      <button class="golcard" data-goto="care" data-sub="heatCard"><span class="gi"><svg class="ic"><use href="#i-thermo"/></svg></span><span class="gt">Keep the heat in</span><span class="gd">What tonight costs in degrees, gallons, and dollars — cover off vs on.</span><span class="gmeta"><svg class="ic"><use href="#i-chevron"/></svg>Care · Heat &amp; evaporation</span></button>
       <button class="golcard" data-goto="care"><span class="gi"><svg class="ic"><use href="#i-sparkle"/></svg></span><span class="gt">Keep up the routine</span><span class="gd">Brushing rhythm, pump runtime, and what to do weekly.</span><span class="gmeta"><svg class="ic"><use href="#i-chevron"/></svg>Care</span></button>
       <button class="golcard" data-goto="trends"><span class="gi"><svg class="ic"><use href="#i-spark"/></svg></span><span class="gt">Track it over time</span><span class="gd">Log readings, watch them ride the safe band, catch drift early.</span><span class="gmeta"><svg class="ic"><use href="#i-chevron"/></svg>Trends</span></button>
     </div>
@@ -1392,6 +1406,58 @@
       </ul>
     </section>
 
+    <section class="card" id="heatCard">
+      <div class="card-head"><div class="ttl"><svg class="ic"><use href="#i-thermo"/></svg><h2>Tonight's heat &amp; evaporation</h2></div></div>
+      <p class="hint">What one night actually costs you, cover off vs on. Evaporation is the sneaky one — it takes both <b>water</b> and <b>heat</b> (every gallon that evaporates drags ~8,800 BTU with it). Physics-based estimate, not a promise.</p>
+      <div class="calc2">
+        <div class="field"><label for="htWater">Water temp <span class="meta">°F now</span></label><input type="number" id="htWater" inputmode="decimal" value="84" step="1" /></div>
+        <div class="field"><label for="htAir">Tonight's low <span class="meta">°F air</span></label><input type="number" id="htAir" inputmode="decimal" value="62" step="1" /></div>
+        <div class="field"><label for="htArea">Surface area <span class="meta">ft² · round: dia² × 0.785</span></label><input type="number" id="htArea" inputmode="decimal" value="346" step="10" min="0" /></div>
+        <div class="field"><label for="htHours">Hours till morning</label><input type="number" id="htHours" inputmode="decimal" value="12" step="1" min="1" max="24" /></div>
+      </div>
+      <div class="row-2" style="margin-top:8px;">
+        <div class="field"><label>Night air</label>
+          <div class="seg mini" id="htHum" role="group" aria-label="Humidity">
+            <button type="button" data-hum="0.30" aria-pressed="false">Dry</button>
+            <button type="button" data-hum="0.55" aria-pressed="true">Typical</button>
+            <button type="button" data-hum="0.75" aria-pressed="false">Muggy</button>
+          </div>
+        </div>
+        <div class="field"><label>Wind at the water</label>
+          <div class="seg mini" id="htWind" role="group" aria-label="Wind">
+            <button type="button" data-wind="0.5" aria-pressed="false">Sheltered</button>
+            <button type="button" data-wind="2" aria-pressed="true">Typical</button>
+            <button type="button" data-wind="5" aria-pressed="false">Open</button>
+          </div>
+        </div>
+        <div class="field"><label>Sky</label>
+          <div class="seg mini" id="htSky" role="group" aria-label="Sky">
+            <button type="button" data-sky="1" aria-pressed="true">Clear</button>
+            <button type="button" data-sky="0" aria-pressed="false">Overcast</button>
+          </div>
+          <p class="skip-note" style="margin:6px 0 0;">Clear nights lose more — the pool radiates to a cold sky.</p>
+        </div>
+        <div class="field"><label for="htHeat">If you heat the pool</label>
+          <select id="htHeat">
+            <option value="none" selected>I don't heat it</option>
+            <option value="gas">Gas heater (~$1.60/therm)</option>
+            <option value="hp">Heat pump (~$0.17/kWh)</option>
+          </select>
+        </div>
+      </div>
+      <div id="htOut" style="margin-top:12px;"></div>
+      <div id="htFcWrap" style="margin-top:18px;border-top:1px solid var(--line);padding-top:14px;">
+        <div style="display:flex;align-items:center;gap:8px;"><svg class="ic" style="color:var(--pool);width:17px;height:17px;"><use href="#i-spark"/></svg><h3 style="margin:0;font-family:var(--display);font-size:1.02rem;">Where your water temp is heading</h3></div>
+        <p class="hint" style="margin:6px 0 10px;" id="htFcHint"></p>
+        <div class="seg mini" id="htSun" role="group" aria-label="This week's sun" style="max-width:300px;">
+          <button type="button" data-sun="20" aria-pressed="true">Sunny</button>
+          <button type="button" data-sun="13" aria-pressed="false">Mixed</button>
+          <button type="button" data-sun="6" aria-pressed="false">Gray</button>
+        </div>
+        <div id="htFc" style="margin-top:10px;"></div>
+      </div>
+    </section>
+
     <section class="card">
       <div class="card-head"><div class="ttl"><svg class="ic"><use href="#i-clip"/></svg><h2>Maintenance minders</h2></div></div>
       <p class="hint">Tap <b>Done</b> when you do each one — this device remembers the date and tells you when it's due again. <span id="minderStoreNote"></span></p>
@@ -1839,11 +1905,60 @@
      * a specific jug/bag the user is looking at. */
     function costPerPpm(product,vol){var p=CL[product];if(!p)throw new Error("Unknown chlorine product: "+product);return p.per*p.cost*(vol/10000);}
     function customCostPerPpm(product,price,sizeOz,vol){var p=CL[product];if(!p)throw new Error("Unknown chlorine product: "+product);if(!(price>0)||!(sizeOz>0))return null;return p.per*(price/sizeOz)*(vol/10000);}
+    /* --- Overnight heat & evaporation model. ---------------------------------
+     * Three loss paths off the water surface, in BTU/(h·ft²):
+     *   evaporation — ASHRAE/Carrier pool correlation ×0.5 unoccupied-pool
+     *     factor, driven by the vapor-pressure gap (water temp vs dew point);
+     *   radiation — Stefan–Boltzmann to an effective sky (clear sky reads
+     *     ~15°F colder than the air; overcast ~3°F);
+     *   convection — simple wind-scaled film coefficient.
+     * A bubble/solar cover blocks ~97% of evaporation and roughly 60% of the
+     * radiant+convective loss — the published "cuts heat loss 50–80%" range
+     * falls out of the physics rather than being asserted.
+     * Wind is NEAR-SURFACE speed in a backyard (sheltered ≈0.5, typical ≈2,
+     * open ≈5 mph) — not the weather-station number. */
+    function psatInHg(tF){var tc=(tF-32)*5/9;return 6.112*Math.exp(17.62*tc/(243.12+tc))*0.02953;}
+    function nightHeat(o){
+      var pw=psatInHg(o.waterF),pa=o.rh*psatInHg(o.airF);
+      var V=o.windMph*88;                                       /* mph → ft/min */
+      var qE=Math.max(0,0.5*(95+0.425*V)*(pw-pa));
+      var TwR=o.waterF+459.67,TskyR=o.airF-(o.clear?15:3)+459.67;
+      var qR=Math.max(0,0.95*0.1714e-8*(Math.pow(TwR,4)-Math.pow(TskyR,4)));
+      /* Convection is SIGNED: air warmer than the water warms the pool. */
+      var qC=(1+0.3*o.windMph)*(o.waterF-o.airF);
+      var fE=o.covered?0.03:1,fRC=o.covered?0.4:1;
+      var btu=(fE*qE+fRC*(qR+qC))*o.area*o.hours;
+      var dropF=btu/(o.vol*8.34);
+      var evapGal=fE*qE*o.area*o.hours/1050/8.34;
+      return {qEvap:qE,qRad:qR,qConv:qC,btu:btu,dropF:dropF,evapGal:evapGal,evapIn:evapGal/(0.6233*o.area)};
+    }
+    /* --- Multi-day water-temperature forecast. --------------------------------
+     * Each day is two 12-hour phases: a day phase adding solar gain (`sunMJ` =
+     * daily shortwave radiation, MJ/m²; water absorbs ~88% bare, ~70% through a
+     * translucent bubble cover) and paying daytime losses against the daily
+     * high, then a night phase against the low (calmer wind). Temps clamp to a
+     * sane 50–95°F band. days[i] = {hiF, loF, sunMJ, rh, windMph, clear}.
+     * Returns end-of-day water temps. */
+    function tempForecast(t0,days,env){
+      var clampT=function(t){return Math.max(50,Math.min(95,t));};
+      var t=clampT(t0),out=[];
+      for(var i=0;i<days.length;i++){
+        var d=days[i];
+        var solar=d.sunMJ*88.06*(env.covered?0.70:0.88)*env.area;
+        var day=nightHeat({area:env.area,vol:env.vol,waterF:t,airF:d.hiF,rh:d.rh,windMph:d.windMph,hours:12,clear:false,covered:env.covered});
+        t=clampT(t+(solar-day.btu)/(env.vol*8.34));
+        var night=nightHeat({area:env.area,vol:env.vol,waterF:t,airF:d.loF,rh:d.rh,windMph:Math.max(0.5,d.windMph*0.6),hours:12,clear:d.clear!==false,covered:env.covered});
+        t=clampT(t-night.btu/(env.vol*8.34));
+        out.push(t);
+      }
+      return out;
+    }
     return {CL:CL,SURFACES:SURFACES,STRATEGIES:STRATEGIES,targets:targets,fcBand:fcBand,TOL:TOL,
       bakingSodaOz:bakingSodaOz,acidOz:acidOz,sodaAshOz:sodaAshOz,
       calciumOz:calciumOz,cyaOz:cyaOz,chlorineOz:chlorineOz,taDrop:taDrop,
       PUCK_OZ:PUCK_OZ,puckFc:puckFc,puckCya:puckCya,pucksPerWeek:pucksPerWeek,
-      csi:csi,drainPct:drainPct,effectOf:effectOf,costPerPpm:costPerPpm,customCostPerPpm:customCostPerPpm};
+      csi:csi,drainPct:drainPct,effectOf:effectOf,costPerPpm:costPerPpm,customCostPerPpm:customCostPerPpm,
+      psatInHg:psatInHg,nightHeat:nightHeat,tempForecast:tempForecast};
   })();
   /* ===== DOSE-ENGINE-END ===================================================== */
   /* Aliases so the rest of the app reads the same as before. `targets` folds
@@ -2314,6 +2429,98 @@
     $("fillOut").innerHTML='<div class="fo-hero"><div class="fo-amt">'+fmtDur(mins)+'</div><div class="fo-range">likely '+fmtDur(mins*0.82)+' – '+fmtDur(mins*1.22)+' · done around '+doneStr+'</div></div><div class="fo-stats"><div class="fo-stat"><span class="fos-v">'+Math.round(gallons).toLocaleString()+'</span><span class="fos-l">gallons to add</span></div><div class="fo-stat"><span class="fos-v">'+r0(gpi)+'</span><span class="fos-l">gal / inch</span></div><div class="fo-stat"><span class="fos-v">'+trim(gpm)+'</span><span class="fos-l">GPM hose</span></div></div>';
   }
 
+  /* ---- CARE: overnight heat & evaporation ---- */
+  var htHum=0.55,htWindV=2,htSky=true,htAirTouched=false;
+  function updateHeat(){
+    var el=$("htOut");if(!el)return;
+    var vol=num("vol")||10000;
+    var water=num("htWater"),air=num("htAir"),area=num("htArea"),hours=num("htHours");
+    if(water==null)water=84;if(air==null)air=62;if(!(area>0))area=346;if(!(hours>0))hours=12;hours=Math.min(24,hours);
+    var base={area:area,vol:vol,waterF:water,airF:air,rh:htHum,windMph:htWindV,hours:hours,clear:htSky};
+    var u=DOSE.nightHeat(Object.assign({covered:false},base));
+    var c=DOSE.nightHeat(Object.assign({covered:true},base));
+    /* Evaporative cooling can pull water a touch below air temp, but not far —
+     * floor the morning estimate rather than show physics run away. */
+    function morning(drop){return Math.max(water-drop,air-4);}
+    var mu=morning(u.dropF),mc=morning(c.dropF);
+    var heatEl=$("htHeat"),heatSel=heatEl?heatEl.value:"none";
+    function cost(btu){return heatSel==="gas"?btu/0.8/100000*1.60:heatSel==="hp"?btu/3.5/3412*0.17:null;}
+    var cu=cost(u.btu),cc2=cost(c.btu);
+    function box(label,icn,r,m,dollars,on){
+      var h='<div class="ht-box'+(on?' on':'')+'"><div class="hb-k">'+ic(icn)+label+'</div><div class="hb-t">'+r1(m)+'°F <span style="font-size:.82rem;font-weight:500;color:var(--ink-soft);">by morning</span></div>';
+      h+='<div class="hb-row">heat lost <b>−'+r1(water-m)+'°F</b> ('+Math.round(r.btu/1000)+'k BTU)</div>';
+      h+='<div class="hb-row">water evaporated <b>'+(r.evapGal<10?r.evapGal.toFixed(1):Math.round(r.evapGal))+' gal</b> ('+r.evapIn.toFixed(2)+'&Prime;)</div>';
+      if(dollars!=null)h+='<div class="hb-row">to heat back: <b>$'+dollars.toFixed(2)+'</b></div>';
+      return h+'</div>';
+    }
+    var keepF=r1(mc-mu),galSaved=u.evapGal-c.evapGal,pct=u.btu>0?Math.round((1-c.btu/u.btu)*100):0;
+    var verdict='<div class="ht-verdict">'+ic("bulb")+'<div><b>The cover keeps ~'+keepF+'°F and ~'+Math.round(galSaved)+' gal in the pool tonight</b> — about '+pct+'% less heat loss. A week of covered nights keeps ~'+Math.round(galSaved*7)+' gal of top-up water'+(cu!=null?' and about <b>$'+Math.round((cu-cc2)*7)+'</b> of heating':'')+' in your pocket.'+((water-air>=15&&htSky)?' Tonight is the worst kind for an open pool — a big water-to-air gap under a clear sky.':'')+' Evaporation is the thief: every gallon that leaves takes ~8,800&nbsp;BTU with it.</div></div>';
+    el.innerHTML='<div class="ht-cmp">'+box("No cover","water",u,mu,cu,false)+box("Bubble cover on","shield",c,mc,cc2,true)+'</div>'+verdict+'<p class="skip-note" style="margin:9px 0 0;">Estimates for a calm backyard; real nights vary. Fetch a forecast on the <b>Plan</b> tab and tonight\'s low fills in automatically.</p>';
+    updateHeatFc();
+  }
+  ["htWater","htArea","htHours"].forEach(function(id){if($(id))$(id).addEventListener("input",updateHeat);});
+  if($("htAir"))$("htAir").addEventListener("input",function(){htAirTouched=true;updateHeat();});
+  if($("htHeat"))$("htHeat").addEventListener("change",updateHeat);
+  if($("htHum"))$("htHum").addEventListener("click",function(e){var b=e.target.closest("[data-hum]");if(!b)return;htHum=parseFloat(b.getAttribute("data-hum"));document.querySelectorAll("#htHum button").forEach(function(x){x.setAttribute("aria-pressed",x===b?"true":"false");});updateHeat();snd("tap");});
+  if($("htWind"))$("htWind").addEventListener("click",function(e){var b=e.target.closest("[data-wind]");if(!b)return;htWindV=parseFloat(b.getAttribute("data-wind"));document.querySelectorAll("#htWind button").forEach(function(x){x.setAttribute("aria-pressed",x===b?"true":"false");});updateHeat();snd("tap");});
+  if($("htSky"))$("htSky").addEventListener("click",function(e){var b=e.target.closest("[data-sky]");if(!b)return;htSky=b.getAttribute("data-sky")==="1";document.querySelectorAll("#htSky button").forEach(function(x){x.setAttribute("aria-pressed",x===b?"true":"false");});updateHeat();snd("tap");});
+  var htSunMJ=20;
+  function firstAt(arr,v){for(var i=0;i<arr.length;i++)if(arr[i]>=v)return i;return -1;}
+  function htFcChart(t0,unc,cov,labels){
+    var W=340,H=170,padL=30,padR=62,padT=12,padB=22,n=unc.length;
+    var all=unc.concat(cov,[t0]);
+    var mn=Math.min.apply(null,all)-2,mx=Math.max.apply(null,all)+2;
+    if(mx<80)mx=Math.min(86,mx+4); /* keep the swim line in view when close */
+    var X=function(i){return padL+(i/n)*(W-padL-padR);},Y=function(v){return padT+(1-(v-mn)/(mx-mn||1))*(H-padT-padB);};
+    var pts=function(arr){var p=X(0).toFixed(1)+","+Y(t0).toFixed(1);for(var i=0;i<arr.length;i++)p+=" "+X(i+1).toFixed(1)+","+Y(arr[i]).toFixed(1);return p;};
+    var h='<svg viewBox="0 0 '+W+' '+H+'" width="100%" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Water temperature forecast, cover on vs off">';
+    if(mx>=78&&mn<=84){var y1=Y(Math.min(84,mx)),y0=Y(Math.max(78,mn));h+='<rect x="'+padL+'" y="'+y1.toFixed(1)+'" width="'+(W-padL-padR)+'" height="'+Math.max(1,y0-y1).toFixed(1)+'" fill="rgba(30,157,98,.10)"/>';}
+    if(78>=mn&&78<=mx)h+='<line x1="'+padL+'" y1="'+Y(78).toFixed(1)+'" x2="'+(W-padR)+'" y2="'+Y(78).toFixed(1)+'" stroke="rgba(30,157,98,.55)" stroke-width="1" stroke-dasharray="4 3"/><text x="'+(padL+2)+'" y="'+(Y(78)-3).toFixed(1)+'" font-size="8.5" fill="#1E9D62" font-family="monospace">78\u00b0 swim</text>';
+    h+='<polyline points="'+pts(unc)+'" fill="none" stroke="#7A9095" stroke-width="2" stroke-dasharray="5 3" stroke-linejoin="round" stroke-linecap="round"/>';
+    h+='<polyline points="'+pts(cov)+'" fill="none" stroke="#0C8C99" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>';
+    h+='<circle cx="'+X(0).toFixed(1)+'" cy="'+Y(t0).toFixed(1)+'" r="3" fill="var(--ink-strong)"/>';
+    h+='<circle cx="'+X(n).toFixed(1)+'" cy="'+Y(unc[n-1]).toFixed(1)+'" r="2.8" fill="#7A9095"/><circle cx="'+X(n).toFixed(1)+'" cy="'+Y(cov[n-1]).toFixed(1)+'" r="2.8" fill="#0C8C99"/>';
+    var yU=Y(unc[n-1]),yC=Y(cov[n-1]);if(Math.abs(yU-yC)<11){var mid=(yU+yC)/2;yC=mid-5.5;yU=mid+5.5;}
+    h+='<text x="'+(X(n)+4)+'" y="'+(yC+3).toFixed(1)+'" font-size="9.5" font-weight="700" fill="#0C8C99" font-family="monospace">'+Math.round(cov[n-1])+'\u00b0 cover</text>';
+    h+='<text x="'+(X(n)+4)+'" y="'+(yU+3).toFixed(1)+'" font-size="9.5" fill="#7A9095" font-family="monospace">'+Math.round(unc[n-1])+'\u00b0 open</text>';
+    var lab=function(i,t){return '<text x="'+X(i).toFixed(1)+'" y="'+(H-7)+'" font-size="8.5" fill="#7A9095" font-family="monospace" text-anchor="middle">'+t+'</text>';};
+    h+=lab(0,"now")+lab(Math.round(n/2),labels[Math.round(n/2)-1]||"")+lab(n,labels[n-1]||"");
+    h+='<text x="2" y="'+(Y(mx-2)+3).toFixed(1)+'" font-size="8.5" fill="#7A9095" font-family="monospace">'+Math.round(mx-2)+'\u00b0</text><text x="2" y="'+(Y(mn+2)+3).toFixed(1)+'" font-size="8.5" fill="#7A9095" font-family="monospace">'+Math.round(mn+2)+'\u00b0</text>';
+    return h+'</svg>';
+  }
+  function updateHeatFc(){
+    var el=$("htFc");if(!el)return;
+    var vol=num("vol")||10000,area=num("htArea");if(!(area>0))area=346;
+    var t0=num("htWater");if(t0==null)t0=84;
+    var live=!!(WX.daily&&WX.daily.hi&&WX.daily.hi.length>=3);
+    var days=[],labels=[];
+    if(live){
+      for(var i=0;i<WX.daily.hi.length;i++){
+        days.push({hiF:WX.daily.hi[i],loF:WX.daily.lo[i],sunMJ:WX.daily.sun[i]!=null?WX.daily.sun[i]:14,rh:((WX.daily.rh[i]!=null?WX.daily.rh[i]:55))/100,windMph:Math.max(0.5,(WX.daily.wind[i]||8)*0.6214*0.3),clear:(WX.daily.pop[i]||0)<40});
+        labels.push(WX.daily.name[i]||("d"+(i+1)));
+      }
+      $("htSun").style.display="none";
+      $("htFcHint").innerHTML="Using your live 7-day forecast"+(WX.place?" for <b>"+escHtml(WX.place)+"</b>":"")+" \u2014 real daily sun, highs, lows, wind, and humidity.";
+    }else{
+      var c=CLIMATE[new Date().getMonth()]||{hi:80,lo:60};
+      for(var j=0;j<7;j++){days.push({hiF:c.hi,loF:c.lo,sunMJ:htSunMJ,rh:htHum,windMph:htWindV,clear:htSky});labels.push("+"+(j+1)+"d");}
+      $("htSun").style.display="";
+      $("htFcHint").innerHTML="No live forecast yet \u2014 this uses seasonal averages plus the sun level you pick. Fetch a forecast on the <b>Plan</b> tab and this switches to the real week.";
+    }
+    var unc=DOSE.tempForecast(t0,days,{area:area,vol:vol,covered:false});
+    var cov=DOSE.tempForecast(t0,days,{area:area,vol:vol,covered:true});
+    var n=unc.length-1,gap=cov[n]-unc[n];
+    var txt="<b>End of week: ~"+Math.round(cov[n])+"\u00b0F with the cover on nightly vs ~"+Math.round(unc[n])+"\u00b0F open</b> \u2014 the cover is worth ~"+r1(gap)+"\u00b0F of swimming temperature.";
+    if(t0<78){
+      var sc=firstAt(cov,78),su=firstAt(unc,78);
+      if(sc>=0&&su<0)txt+=" Covered, you reach a swimmable 78\u00b0 in about "+(sc+1)+" day"+(sc?"s":"")+"; open, you don\u2019t get there this week.";
+      else if(sc>=0&&su>sc)txt+=" You hit 78\u00b0 about "+(su-sc)+" day"+(su-sc>1?"s":"")+" sooner with the cover.";
+    }
+    if(Math.max.apply(null,cov)>=93)txt+=" Covered in this weather the water runs hot \u2014 pull the cover back if it turns soupy (the model caps at 95\u00b0).";
+    el.innerHTML=htFcChart(t0,unc,cov,labels)+'<div class="ht-verdict">'+ic("spark")+'<div>'+txt+'</div></div>';
+  }
+  if($("htSun"))$("htSun").addEventListener("click",function(e){var b=e.target.closest("[data-sun]");if(!b)return;htSunMJ=parseFloat(b.getAttribute("data-sun"));document.querySelectorAll("#htSun button").forEach(function(x){x.setAttribute("aria-pressed",x===b?"true":"false");});updateHeatFc();snd("tap");});
+
   /* ---- CARE: maintenance minders ---- */
   var MINDERS=[
     {id:"pumpbasket",name:"Clear pump strainer basket",ic:"filter",days:7},
@@ -2399,12 +2606,13 @@
     var btn=$("fcBtn");btn.disabled=true;btn.innerHTML=ic("clock")+"Loading…";
     geocodeZip(zip).then(function(loc){
       WX.lat=loc.lat;WX.lon=loc.lon;setPlace(loc.place);lsSet("poolZip",zip);
-      var url="https://api.open-meteo.com/v1/forecast?latitude="+loc.lat+"&longitude="+loc.lon+"&daily=temperature_2m_max,temperature_2m_min,precipitation_sum,precipitation_probability_max,weather_code&temperature_unit=fahrenheit&timezone=auto&forecast_days=7";
+      var url="https://api.open-meteo.com/v1/forecast?latitude="+loc.lat+"&longitude="+loc.lon+"&daily=temperature_2m_max,temperature_2m_min,precipitation_sum,precipitation_probability_max,weather_code,shortwave_radiation_sum,wind_speed_10m_max,relative_humidity_2m_mean&temperature_unit=fahrenheit&timezone=auto&forecast_days=7";
       return fetch(url);
     }).then(function(r){if(!r.ok)throw new Error("net");return r.json();}).then(function(j){
       var d=j.daily;if(!d||!d.time)throw new Error("data");
       var strip='<div class="fcstrip">';
       var maxHi=-99,maxPop=0,totP=0;
+      WX.daily={hi:[],lo:[],sun:[],wind:[],rh:[],pop:[],name:[]};
       for(var i=0;i<d.time.length;i++){
         var hi=Math.round(d.temperature_2m_max[i]),lo=Math.round(d.temperature_2m_min[i]);
         var pop=d.precipitation_probability_max?(d.precipitation_probability_max[i]||0):0;
@@ -2412,11 +2620,17 @@
         maxHi=Math.max(maxHi,hi);maxPop=Math.max(maxPop,pop);totP+=pr;
         var w=wcode(d.weather_code[i]);
         var nm=i===0?"Today":new Date(d.time[i]+"T12:00:00").toLocaleDateString(undefined,{weekday:"short"});
+        WX.daily.hi.push(hi);WX.daily.lo.push(lo);WX.daily.pop.push(pop);WX.daily.name.push(nm);
+        WX.daily.sun.push(d.shortwave_radiation_sum?d.shortwave_radiation_sum[i]:null);
+        WX.daily.wind.push(d.wind_speed_10m_max?d.wind_speed_10m_max[i]:null);
+        WX.daily.rh.push(d.relative_humidity_2m_mean?d.relative_humidity_2m_mean[i]:null);
         strip+='<div class="fcday"><div class="d">'+nm+'</div><svg class="ic wi"><use href="#i-'+w[0]+'"/></svg><div class="hi">'+hi+'°</div><div class="lo">'+lo+'°</div><div class="pop">'+pop+'%</div></div>';
       }
       strip+='</div>';
       $("fcStripWrap").innerHTML=strip;
       $("wkTempV").textContent="High ~"+maxHi+"°";
+      if(d.temperature_2m_min&&d.temperature_2m_min.length&&$("htAir")&&!htAirTouched){$("htAir").value=Math.round(d.temperature_2m_min[0]);}
+      updateHeat();
       $("wkWhen").textContent="This week · "+(WX.place||"live forecast");
       var t;
       if(maxHi>=85)t="Hot stretch ahead ("+maxHi+"°). Expect higher chlorine use — test every 1–2 days and keep the cover on when idle.";
@@ -2732,7 +2946,7 @@
     document.querySelectorAll(".tab").forEach(function(s){s.classList.toggle("active",s.getAttribute("data-tab")===name);});
     window.scrollTo({top:0,behavior:"smooth"});
     if(name==="supplies"){updateSupplies();renderGear();}
-    else if(name==="care"){updatePump();renderMinders();}
+    else if(name==="care"){updatePump();updateHeat();renderMinders();}
     else if(name==="plan"){renderAlmanac();}
     else if(name==="trends"){renderTrends();}
     else if(name==="fixit"){updateMustard();}
@@ -2853,7 +3067,7 @@
     if(s.season==="open"||s.season==="peak"||s.season==="close"){season=s.season;document.querySelectorAll('.seg [data-season]').forEach(function(x){x.setAttribute("aria-pressed",x.getAttribute("data-season")===season?"true":"false");});}
     if(s.cover&&COVER[s.cover]){cover=s.cover;document.querySelectorAll("#coverSeg button").forEach(function(x){x.setAttribute("aria-pressed",x.getAttribute("data-cover")===cover?"true":"false");});}
   }
-  function inputsChanged(){updateSetupChips();updateCheat();updateSupplies();updatePump();updateMustard();updatePuckUI();updateStrategyUI();updateCsi();updateFx();updatePriceCheck();paintAllRows();saveSetup();}
+  function inputsChanged(){updateSetupChips();updateCheat();updateSupplies();updatePump();updateMustard();updatePuckUI();updateStrategyUI();updateCsi();updateFx();updatePriceCheck();updateHeat();paintAllRows();saveSetup();}
   ["vol","product"].forEach(function(id){$(id).addEventListener("input",inputsChanged);});
   $("product").addEventListener("change",inputsChanged);
   if($("shockProduct"))$("shockProduct").addEventListener("change",inputsChanged);
@@ -3151,7 +3365,8 @@
   /* ---- init ---- */
   loadSetup();
   paintScale(40);refreshBars();syncHints();updateSetupChips();updateSeasonTip();updateCheat();
-  updateSupplies();renderGear();updatePump();updatePuckUI();updateStrategyUI();updateCsi();updateFx();updatePriceCheck();renderMinders();buildDecon();updateMustard();renderAlmanac();migrateLog();renderTrends();setMode("balance");
+  if($("htArea")&&num("fillDia"))$("htArea").value=Math.round(Math.PI*Math.pow((num("fillDia")||21)/2,2));
+  updateSupplies();renderGear();updatePump();updatePuckUI();updateStrategyUI();updateCsi();updateFx();updatePriceCheck();updateHeat();renderMinders();buildDecon();updateMustard();renderAlmanac();migrateLog();renderTrends();setMode("balance");
   /* ---- appearance: dark/light/auto + dynamic text size ---- */
   var PREF={theme:"auto",scale:100};
   try{var pt=localStorage.getItem("poolTheme");if(pt==="light"||pt==="dark"||pt==="auto")PREF.theme=pt;}catch(e){}
