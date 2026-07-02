@@ -245,11 +245,33 @@ test("water-temperature forecast: solar days in, cover holds the heat", () => {
   assert.ok(Math.min(...cold) >= 50);
 });
 
+test("salt: band and dose for chlorine-generator pools", () => {
+  // Generic cell band, overridable by the cell label in spirit but locked here.
+  assert.deepEqual(DOSE.SALT, { min: 2700, ideal: 3200, max: 3600 });
+  // 1 ppm in 10k gal (83,400 lb water) = 0.0834 lb of salt.
+  near(DOSE.saltLb(2700, 3200, 10000), 500 * 0.0834);   // 41.7 lb ≈ one 40-lb bag + a little
+  near(DOSE.saltLb(2000, 3200, 10000), 1200 * 0.0834);  // fresh fill: ~100 lb
+  near(DOSE.saltLb(2700, 3200, 20000), 2 * 500 * 0.0834); // scales with volume
+  near(DOSE.saltLb(3200, 3200, 10000), 0);
+});
+
+test("borates: TFP-derived rates for both routes", () => {
+  assert.deepEqual(DOSE.BORATE, { min: 30, ideal: 40, max: 50 });
+  // The 50-ppm recipe for 10k gal: ~22.5 lb borax + ~1.9 gal acid, or ~14.7 lb boric acid.
+  near(DOSE.borateBoraxOz(0, 50, 10000), 360);    // 7.2 oz/ppm → 22.5 lb
+  near(DOSE.borateAcidFlOz(0, 50, 10000), 245);   // 4.9 fl oz/ppm → ~1.9 gal
+  near(DOSE.borateBoricOz(0, 50, 10000), 235);    // 4.7 oz/ppm → ~14.7 lb
+  // Top-up after a 25% water change from 40 ppm: only the diluted share.
+  near(DOSE.borateBoraxOz(30, 40, 10000), 72);
+  // Scales with volume.
+  near(DOSE.borateBoricOz(0, 50, 20000), 470);
+});
+
 test("test-resolution tolerances are locked (the anti-annoyance layer)", () => {
   // These decide when the app says "within test tolerance — no dose" instead
   // of prescribing a correction a home test couldn't even verify. Widening
   // them hides real problems; narrowing them nags users over noise.
-  assert.deepEqual(DOSE.TOL, { fc: 0.5, ph: 0.1, ta: 10, cya: 10, ch: 25 });
+  assert.deepEqual(DOSE.TOL, { fc: 0.5, ph: 0.1, ta: 10, cya: 10, ch: 25, salt: 200 });
 });
 
 test("puck (3\" trichlor tablet) math for the feeder", () => {
