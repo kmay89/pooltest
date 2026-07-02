@@ -21,6 +21,25 @@ tolerance"* instead of prescribing a micro-dose your strip couldn't verify —
 and when a strip bottle's generic "OK" range disagrees with the computed
 target, the dose list says so and explains why.
 
+A **care strategy** picker (Balanced / Crystal-clear / Save money / Low effort)
+tunes where you aim *inside* the safe band and what gets recommended — the
+algae floor and shock level never move. "Save money" computes the cheapest
+honest chlorine for your pool and estimates the seasonal savings of switching.
+
+Pro tools, all free and client-side:
+- **Water balance (CSI)** — the Langelier/calcite saturation index from your
+  readings plus water temp and TDS, with surface-aware advice (etching vs
+  scale) and a winterization what-if (set the temp to your coldest water).
+- **"What happens if I add…"** — the dose list in reverse: preview any
+  amount of any product before you pour it, including side-effects
+  (dichlor/trichlor's permanent CYA, cal-hypo's calcium).
+- **Dilution math** — high CYA/CH steps state the exact % of water (and
+  gallons) to swap, not just "partial drain."
+- **Chlorine price check** — enter any shelf price and container size and get
+  $ per +1 ppm FC in *your* pool, judged against going rates (with the CYA
+  "baggage cost" of stabilized products called out).
+- **Volume calculator** — round / oval / rectangle with average depth.
+
 ---
 
 ## Who it's for
