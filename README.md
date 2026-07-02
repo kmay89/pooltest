@@ -193,7 +193,44 @@ These are guidance estimates — confirm large or unusual doses against a reliab
 drop-test kit before adding. Add chemicals to water (never the reverse), one at a
 time, with the pump running. **Not professional, medical, or safety advice.**
 
-### Certifying the math — regression tests
+### Certifying the math — two test suites
+
+**`tests/dosing.test.mjs` (golden lock, 27 tests)** asserts known, hand-checked
+doses so no edit can silently change a real-world amount.
+
+**`tests/ui-verification.test.mjs` (display proof, 9 tests, Playwright)**
+drives the real page in Chromium and proves what the user SEES matches the
+engine: an independent re-implementation of the display contract (which step
+kind renders for which reading under the band + tolerance rules) checked
+against 200 seeded scenarios plus an exact band-edge matrix; every rendered
+amount parsed back out of its human formatting and compared to the engine's
+ounces; badges never contradicting the dose list; SLAM, the mustard playbook,
+and the engine band showing the same shock number; what-if previews matching
+effectOf with over-shock warnings; fluid/dry unit grammar; the combined-
+chlorine banner's 0.5-ppm boundary; and zero console errors throughout.
+(Skips cleanly when Playwright/Chromium isn't installed.)
+
+**`tests/verification.test.mjs` (correctness proof, 32 tests, ~25,000
+assertions)** proves the math is right in the first place, three independent
+ways:
+- **First principles** — every dosing constant re-derived in-test from
+  molecular weights, densities, and unit conversions (none of the app's
+  constants copied in): chlorine strengths from trade-%, baking soda via
+  NaHCO₃→CaCO₃ equivalence, CaCl₂ bracketed by its hydrate forms, trichlor's
+  CYA-per-FC from its molecular formula, borax/boric-acid boron equivalence,
+  Magnus vapor pressure vs steam tables, exact salt mass-fraction arithmetic.
+- **Properties** — invariants swept over the whole input space with a seeded
+  fuzzer: FC band ordering (min ≤ ideal ≤ max < shock) for every CYA 1–300 ×
+  salt × strategy, strategy-invariant safety lines, exact linearity in volume
+  and deficit, dose↔effect inverse round-trips, CSI's logarithmic identities
+  (doubling CH shifts CSI by exactly log₁₀2), the heat model's energy
+  bookkeeping (ΔT × thermal mass ≡ BTU; evaporated gallons ↔ latent heat),
+  forecast convergence, exact dilution algebra, and no-NaN hygiene with loud
+  errors for unknown products.
+- **Published cross-checks** — the doses every pool tech knows ("a gallon of
+  12.5% ≈ 12 ppm in 10k gal", the TFP SLAM table, APSP plaster bands).
+
+#### Regression tests
 
 Because a wrong number here means a real person pours the wrong amount into their
 pool, the dosing math is **locked by tests**. The formulas live in one DOM-free,
