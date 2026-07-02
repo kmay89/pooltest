@@ -827,7 +827,9 @@
   .field input[type="date"]{font-family:var(--mono);color:var(--ink);}
   @media (prefers-reduced-motion: reduce){*{transition:none !important;animation:none !important;}}
   @media print{
-    *,*::before,*::after{animation:none !important;transition:none !important;opacity:1 !important;}
+    *,*::before,*::after{animation:none !important;transition:none !important;}
+    /* chart draw-in keeps its hidden state in base CSS, so force lines visible on paper */
+    polyline[pathLength]{stroke-dasharray:none !important;stroke-dashoffset:0 !important;}
     /* Always print on a light palette, whatever the on-screen theme. */
     html{color-scheme:light;--bg:#EAF1F0;--card:#FFFFFF;--ink:#0A2227;--ink-strong:#072F36;--ink-soft:#496064;--ink-faint:#7A9095;--line:#D6E2E0;--line-strong:#BFD0CE;--tint:#F2F7F6;--tint-3:#D2DFDD;--input-bg:#FBFDFD;--pool:#0C8C99;--pool-btn:#0C8C99;--good:#1E9D62;--warn:#C97C18;--alert:#CF4631;--mustard:#C9A22B;--amber-ink:#7E4D0F;--good-ink:#16633F;--alert-ink:#A2331F;--mustard-ink:#7A5E0E;}
     body{background:var(--card);}
@@ -850,10 +852,15 @@
   .brand>.ic{animation:bob 3.6s ease-in-out infinite;}
   @keyframes floaty{0%,100%{transform:translateY(0);}50%{transform:translateY(-4px);}}
   .empty-note>.ic{animation:floaty 3.2s ease-in-out infinite;}
-  /* live controls glide instead of jump */
+  /* live controls glide instead of jump — but track the finger 1:1 during a drag */
   .sld-fill,.sld-zone,.sld-ghost{transition:width .28s ease,left .28s ease;}
+  .sld-track-wrap:has(input[type=range]:active) .sld-fill,
+  .sld-track-wrap:has(input[type=range]:active) .sld-zone,
+  .sld-track-wrap:has(input[type=range]:active) .sld-ghost{transition:none;}
   .scale .zone{transition:left .16s ease-out,width .16s ease-out;}
   .scale .tick{transition:left .16s ease-out;}
+  .signature:has(input[type=range]:active) .scale .zone,
+  .signature:has(input[type=range]:active) .scale .tick{transition:none;}
   /* pointer-device lift for tappable cards */
   @media(hover:hover){
     .golcard,.inv,.sym,.modebtn,.gchip,.tgt{transition:transform .16s ease,box-shadow .16s ease,border-color .16s ease;}
@@ -868,6 +875,9 @@
   .bigchart circle,.htfc circle{transform-box:fill-box;transform-origin:center;animation:dotin .3s ease-out both;}
   @media (prefers-reduced-motion: reduce){
     *,*::before,*::after{animation-duration:.01ms !important;animation-delay:0ms !important;transition-duration:.01ms !important;}
+    /* the older kill switch above uses animation:none, which would strand the
+       chart draw-in at its hidden base state — pin lines visible instead */
+    polyline[pathLength]{stroke-dasharray:none !important;stroke-dashoffset:0 !important;}
   }
 </style>
 </head>
