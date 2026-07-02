@@ -1052,7 +1052,24 @@
       <div class="setup-body">
         <div class="row-2">
           <div class="field"><label for="vol">Pool volume <span class="meta">gal</span></label><input type="number" id="vol" inputmode="decimal" value="10000" step="100" />
-            <p class="skip-note" style="margin:6px 0 0;">Rough guides (48&Prime; wall): 15&nbsp;ft round &asymp; 5,000 · 18&nbsp;ft &asymp; 7,500 · 21&nbsp;ft &asymp; 10,000 · 24&nbsp;ft &asymp; 13,000 · 27&nbsp;ft &asymp; 17,000 gal. Rectangle: L &times; W &times; avg depth &times; 7.5.</p>
+            <p class="skip-note" style="margin:6px 0 0;">Rough guides (48&Prime; wall): 15&nbsp;ft round &asymp; 5,000 · 18&nbsp;ft &asymp; 7,500 · 21&nbsp;ft &asymp; 10,000 · 24&nbsp;ft &asymp; 13,000 gal. <button type="button" class="linklike" id="volCalcBtn" style="background:none;border:none;padding:0;color:var(--pool);font:inherit;font-size:inherit;cursor:pointer;text-decoration:underline;">Not sure? Calculate it from shape</button></p>
+            <div id="volCalc" hidden style="margin-top:10px;padding:11px 12px;border:1px dashed var(--line-strong);border-radius:10px;background:var(--tint);">
+              <div class="row-2" style="margin-bottom:8px;">
+                <div class="field"><label for="vcShape">Shape</label>
+                  <select id="vcShape"><option value="round" selected>Round</option><option value="oval">Oval</option><option value="rect">Rectangle</option></select>
+                </div>
+                <div class="field"><label for="vcDepth">Average water depth <span class="meta">ft</span></label><input type="number" id="vcDepth" inputmode="decimal" value="3.5" step="0.25" min="0" /></div>
+              </div>
+              <div class="row-2">
+                <div class="field" id="vcAWrap"><label for="vcA"><span id="vcALbl">Diameter</span> <span class="meta">ft</span></label><input type="number" id="vcA" inputmode="decimal" value="21" step="0.5" min="0" /></div>
+                <div class="field" id="vcBWrap" hidden><label for="vcB">Width <span class="meta">ft</span></label><input type="number" id="vcB" inputmode="decimal" value="12" step="0.5" min="0" /></div>
+              </div>
+              <div style="display:flex;align-items:center;gap:12px;margin-top:9px;flex-wrap:wrap;">
+                <b id="vcOut" style="font-family:var(--mono);font-size:1.02rem;">—</b>
+                <button type="button" class="act btn-primary" id="vcUse" style="padding:8px 14px;">Use this volume</button>
+              </div>
+              <p class="skip-note" style="margin:8px 0 0;">Average depth = (shallow + deep) ÷ 2. If the water isn't at full height, use the actual water depth — dosing cares about the water, not the wall.</p>
+            </div>
           </div>
           <div class="field"><label for="surface">Pool surface</label>
             <select id="surface">
@@ -1098,6 +1115,14 @@
           <button type="button" data-season="peak" aria-pressed="true"><svg class="ic"><use href="#i-sun"/></svg>Summer</button>
           <button type="button" data-season="close" aria-pressed="false"><svg class="ic"><use href="#i-snow"/></svg>Closing</button>
         </div>
+        <p class="skip-note" style="margin:14px 2px 4px;"><b>What matters most to you?</b> Tunes where you aim inside the safe band and what gets recommended — never the safety lines themselves.</p>
+        <div class="seg" role="group" aria-label="Care strategy" id="strategySeg">
+          <button type="button" data-strategy="steady" aria-pressed="true"><svg class="ic"><use href="#i-check"/></svg>Balanced</button>
+          <button type="button" data-strategy="crystal" aria-pressed="false"><svg class="ic"><use href="#i-sparkle"/></svg>Crystal-clear</button>
+          <button type="button" data-strategy="thrifty" aria-pressed="false"><svg class="ic"><use href="#i-tag"/></svg>Save money</button>
+          <button type="button" data-strategy="easy" aria-pressed="false"><svg class="ic"><use href="#i-clock"/></svg>Low effort</button>
+        </div>
+        <div class="tip" id="strategyTip" style="margin-top:10px;"><svg class="ic"><use href="#i-check"/></svg><div class="txt" id="strategyTipTxt"></div></div>
         <p class="skip-note" style="margin:12px 2px 0;">Everything here is remembered on this device.</p>
       </div>
     </details>
@@ -1108,6 +1133,55 @@
       <div class="card-head"><div class="ttl"><svg class="ic"><use href="#i-check"/></svg><h2>Your target numbers</h2></div></div>
       <p class="hint">Where you're aiming — at a glance, no reading required.</p>
       <div class="targets-grid" id="targetsGrid"></div>
+    </section>
+
+    <section class="card" id="fxCard" style="margin-top:18px;">
+      <div class="card-head"><div class="ttl"><svg class="ic"><use href="#i-flask"/></svg><h2>What happens if I add…</h2></div></div>
+      <p class="hint">The dose list in reverse — check an amount <em>before</em> you pour it, or see what that scoop you already added did. Uses your pool volume.</p>
+      <div class="calc2">
+        <div class="field" style="grid-column:1/-1;"><label for="fxItem">Chemical</label>
+          <select id="fxItem">
+            <optgroup label="Chlorine">
+              <option value="liq125" selected>12.5% liquid chlorine</option>
+              <option value="liq10">10% liquid chlorine</option>
+              <option value="bleach825">8.25% household bleach</option>
+              <option value="bleach6">6% household bleach</option>
+              <option value="calhypo">Cal-hypo granular (65%)</option>
+              <option value="dichlor">Dichlor granular (56%)</option>
+              <option value="trichlor">Trichlor (pucks, 90%)</option>
+            </optgroup>
+            <optgroup label="Balance">
+              <option value="bakingsoda">Baking soda (alkalinity up)</option>
+              <option value="sodaash">Soda ash (pH up)</option>
+              <option value="acid">Muriatic acid 31.45% (pH down)</option>
+              <option value="cyagran">Cyanuric acid (stabilizer)</option>
+              <option value="calchl">Calcium chloride</option>
+            </optgroup>
+          </select>
+        </div>
+        <div class="field"><label for="fxAmt">Amount</label><input type="number" id="fxAmt" inputmode="decimal" value="32" step="1" min="0" /></div>
+        <div class="field"><label for="fxUnit">Unit</label>
+          <select id="fxUnit">
+            <option value="1" selected>oz / fl oz</option>
+            <option value="8">cups</option>
+            <option value="16">lb</option>
+            <option value="32">quarts</option>
+            <option value="128">gallons</option>
+          </select>
+        </div>
+      </div>
+      <div id="fxOut" style="margin-top:8px;"></div>
+    </section>
+
+    <section class="card" id="csiCard" style="margin-top:18px;">
+      <div class="card-head"><div class="ttl"><svg class="ic"><use href="#i-gem"/></svg><h2>Water balance (CSI)</h2></div></div>
+      <p class="hint">The chemist's single number: does your water want to <b>dissolve</b> calcium (etch plaster, corrode) or <b>drop</b> it (scale)? Computed from your pH, alkalinity, calcium, stabilizer, and water temperature above. Between <b>−0.3 and +0.3</b> is happy water.</p>
+      <div class="calc2">
+        <div class="field"><label for="csiTemp">Water temp <span class="meta">°F</span></label><input type="number" id="csiTemp" inputmode="decimal" value="84" step="1" /></div>
+        <div class="field"><label for="csiTds">TDS <span class="meta">ppm · salt pools ≈ salt level</span></label><input type="number" id="csiTds" inputmode="decimal" value="1000" step="100" min="0" /></div>
+      </div>
+      <div id="csiOut" style="margin-top:8px;"></div>
+      <p class="skip-note" style="margin:10px 0 0;"><b>Closing tip:</b> set the temp to your coldest winter water (~40°F) before you winterize — cold water drives CSI down, and water that's balanced in August can spend the winter quietly etching plaster. Balance for the winter number, not the summer one.</p>
     </section>
 
     <section class="explainer">
@@ -1163,6 +1237,37 @@
 
     <h2 class="sec-h" style="margin-top:6px;"><svg class="ic"><use href="#i-box"/></svg> Your season shopping list</h2>
     <div id="invList"></div>
+
+    <section class="card" id="priceCard" style="margin-top:16px;">
+      <div class="card-head"><div class="ttl"><svg class="ic"><use href="#i-tag"/></svg><h2>Chlorine price check — is that jug a deal?</h2></div></div>
+      <p class="hint">Chlorine products can't be compared by sticker price — a cheap weak jug loses to a pricier strong one. Enter what's on the shelf and get the number that actually matters: <b>dollars per +1 ppm of chlorine in <em>your</em> pool</b>.</p>
+      <div class="calc2">
+        <div class="field" style="grid-column:1/-1;"><label for="pcProd">Product on the shelf</label>
+          <select id="pcProd">
+            <option value="liq125" selected>12.5% liquid chlorine</option>
+            <option value="liq10">10% liquid chlorine</option>
+            <option value="bleach825">8.25% household bleach</option>
+            <option value="bleach6">6% household bleach</option>
+            <option value="calhypo">Cal-hypo granular (65%)</option>
+            <option value="dichlor">Dichlor granular (56%)</option>
+            <option value="trichlor">Trichlor tablets (90%)</option>
+          </select>
+        </div>
+        <div class="field"><label for="pcPrice">Shelf price <span class="meta">$</span></label><input type="number" id="pcPrice" inputmode="decimal" step="0.25" min="0" placeholder="e.g. 6.99" /></div>
+        <div class="field"><label for="pcSize">Container size</label>
+          <div style="display:flex;gap:8px;">
+            <input type="number" id="pcSize" inputmode="decimal" step="0.5" min="0" placeholder="e.g. 1" style="flex:1;min-width:0;" />
+            <select id="pcUnit" style="flex:0 0 92px;">
+              <option value="128" selected>gal</option>
+              <option value="32">qt</option>
+              <option value="1">fl oz / oz</option>
+              <option value="16">lb</option>
+            </select>
+          </div>
+        </div>
+      </div>
+      <div id="pcOut" style="margin-top:8px;"></div>
+    </section>
 
     <h2 class="sec-h"><svg class="ic"><use href="#i-tag"/></svg> When to buy for the best price</h2>
     <div class="timeline">
@@ -1619,10 +1724,23 @@
         ch:{min:s.ch.min,ideal:s.ch.ideal,max:s.ch.max,optional:!!s.chOptional},
         cya:salt?{min:60,ideal:70,max:80}:{min:30,ideal:40,max:50}};
     }
-    function fcBand(cya,salt){
+    /* Care strategies. They tune WHERE inside the safe band you aim — never the
+     * band itself. The algae floor (5% of CYA) and shock level (40%) are safety
+     * lines and identical in every strategy; "saving money" by aiming below the
+     * floor costs a $50 algae bloom, so thrifty saves via product choice and
+     * habits instead. crystal/easy aim higher for extra margin (sparkle /
+     * less-frequent testing). */
+    var STRATEGIES={
+      steady:{label:"balanced",fcMul:0.075,fcMulSalt:0.06},
+      crystal:{label:"crystal-clear",fcMul:0.09,fcMulSalt:0.07},
+      thrifty:{label:"save money",fcMul:0.075,fcMulSalt:0.06},
+      easy:{label:"low effort",fcMul:0.085,fcMulSalt:0.065}
+    };
+    function fcBand(cya,salt,strategy){
+      var st=STRATEGIES[strategy]||STRATEGIES.steady;
       if(cya===null||cya<1)return {min:1,ideal:2,max:3,shock:10,nocya:true};
-      if(salt)return {min:Math.max(3,r1(cya*0.05)),ideal:r1(cya*0.06),max:r1(cya*0.08),shock:r0(cya*0.4)};
-      return {min:Math.max(2,r1(cya*0.05)),ideal:r1(cya*0.075),max:r1(cya*0.10),shock:r0(cya*0.4)};
+      if(salt)return {min:Math.max(3,r1(cya*0.05)),ideal:Math.max(3,r1(cya*st.fcMulSalt)),max:r1(cya*0.08),shock:r0(cya*0.4)};
+      return {min:Math.max(2,r1(cya*0.05)),ideal:Math.max(2,r1(cya*st.fcMul)),max:r1(cya*0.10),shock:r0(cya*0.4)};
     }
     /* Test-resolution tolerances. Home tests read in coarse steps (a strip's FC
      * blocks jump 0.5 → 1 → 3; drop kits resolve ~0.5 ppm / 0.2 pH / 10 ppm).
@@ -1652,17 +1770,64 @@
     function puckFc(vol){return PUCK_OZ/CL.trichlor.per/(vol/10000);}                    /* +ppm FC one puck delivers as it fully dissolves */
     function puckCya(vol){return puckFc(vol)*0.61;}                                      /* +ppm CYA that same puck leaves behind, permanently */
     function pucksPerWeek(vol,demandPpmDay){var d=(demandPpmDay==null||isNaN(demandPpmDay))?2.5:demandPpmDay;return (d*7)/puckFc(vol);} /* pucks to cover a week's FC demand */
-    return {CL:CL,SURFACES:SURFACES,targets:targets,fcBand:fcBand,TOL:TOL,
+    /* --- CSI: calcite saturation index (Langelier). The chemist's single
+     * number for whether water wants to DISSOLVE calcium (etch plaster) or
+     * DROP it (scale). pH − pHs with the standard A/B/C/D factors; carbonate
+     * alkalinity is TA corrected for the cyanurate contribution (−CYA/3).
+     * Balanced: −0.3 … +0.3. Below: corrosive. Above: scale-forming. */
+    function csi(ph,ta,ch,cya,tempF,tds){
+      var carbAlk=Math.max(1,ta-(cya||0)/3);
+      var f=(tempF==null||isNaN(tempF))?84:tempF;
+      var tC=(f-32)*5/9;
+      var T=(tds==null||isNaN(tds)||tds<1)?1000:tds;
+      var A=(Math.log(T)/Math.LN10-1)/10;
+      var B=-13.12*(Math.log(tC+273.15)/Math.LN10)+34.55;
+      var C=(Math.log(Math.max(1,ch))/Math.LN10)-0.4;
+      var D=Math.log(carbAlk)/Math.LN10;
+      return ph-(9.3+A+B-(C+D));
+    }
+    /* --- Dilution: the only way down for CYA and calcium. Fraction of the
+     * water to swap with fresh fill to get from `current` to `target`. --- */
+    function drainPct(current,target){
+      if(!(current>0)||!(target>=0)||target>=current)return 0;
+      return Math.min(1,1-target/current);
+    }
+    /* --- "What happens if I add…" — the dose functions inverted. Returns the
+     * ppm/pH deltas a given amount of product causes in a given volume. --- */
+    function effectOf(item,amountOz,vol){
+      var k=vol/10000;
+      if(CL[item]){
+        var fc=amountOz/(CL[item].per*k),o={fc:fc};
+        if(item==="dichlor")o.cya=fc*0.9;
+        if(item==="trichlor")o.cya=fc*0.61;
+        if(item==="calhypo")o.ch=fc*0.7;
+        return o;
+      }
+      if(item==="bakingsoda")return {ta:amountOz/(24*k)*10};
+      if(item==="sodaash")return {ph:amountOz/(6*k)*0.2,ta:amountOz/(6*k)*4.2};
+      if(item==="acid")return {ph:-(amountOz/(8*k))*0.2,ta:-taDrop(amountOz,vol)};
+      if(item==="cyagran")return {cya:amountOz/(13*k)*10};
+      if(item==="calchl")return {ch:amountOz/(1.84*k)};
+      throw new Error("Unknown item: "+item);
+    }
+    /* --- Chemical-counter math: $ per +1 ppm FC in a given pool. ---
+     * costPerPpm uses the built-in rough shelf prices; customCostPerPpm prices
+     * a specific jug/bag the user is looking at. */
+    function costPerPpm(product,vol){var p=CL[product];if(!p)throw new Error("Unknown chlorine product: "+product);return p.per*p.cost*(vol/10000);}
+    function customCostPerPpm(product,price,sizeOz,vol){var p=CL[product];if(!p)throw new Error("Unknown chlorine product: "+product);if(!(price>0)||!(sizeOz>0))return null;return p.per*(price/sizeOz)*(vol/10000);}
+    return {CL:CL,SURFACES:SURFACES,STRATEGIES:STRATEGIES,targets:targets,fcBand:fcBand,TOL:TOL,
       bakingSodaOz:bakingSodaOz,acidOz:acidOz,sodaAshOz:sodaAshOz,
       calciumOz:calciumOz,cyaOz:cyaOz,chlorineOz:chlorineOz,taDrop:taDrop,
-      PUCK_OZ:PUCK_OZ,puckFc:puckFc,puckCya:puckCya,pucksPerWeek:pucksPerWeek};
+      PUCK_OZ:PUCK_OZ,puckFc:puckFc,puckCya:puckCya,pucksPerWeek:pucksPerWeek,
+      csi:csi,drainPct:drainPct,effectOf:effectOf,costPerPpm:costPerPpm,customCostPerPpm:customCostPerPpm};
   })();
   /* ===== DOSE-ENGINE-END ===================================================== */
   /* Aliases so the rest of the app reads the same as before. `targets` folds
    * in the Pool-setup surface choice so every caller stays surface-aware. */
-  var CL=DOSE.CL, fcBand=DOSE.fcBand, TOL=DOSE.TOL;
-  var surface="vinyl";
+  var CL=DOSE.CL, TOL=DOSE.TOL;
+  var surface="vinyl", strategy="steady";
   var targets=function(salt){return DOSE.targets(salt,surface);};
+  var fcBand=function(cya,salt){return DOSE.fcBand(cya,salt,strategy);};
   /* Runtime guard: the same golden doses the test suite certifies, re-checked in
    * the browser on load. Silent when correct; one loud console warning if the
    * engine ever drifts in a deployed build. Cheap insurance against mis-dosing. */
@@ -1676,7 +1841,11 @@
         && Math.abs(DOSE.puckFc(10000)-16/3)<1e-9
         && Math.abs(DOSE.taDrop(8,10000)-3.1)<1e-9
         && DOSE.targets(false,"plaster").ch.ideal===350
-        && DOSE.fcBand(40,false).shock===16;
+        && DOSE.fcBand(40,false).shock===16
+        && DOSE.fcBand(40,false,"crystal").ideal===3.6
+        && Math.abs(DOSE.drainPct(100,50)-0.5)<1e-9
+        && Math.abs(DOSE.effectOf("liq125",21,10000).fc-2)<1e-9
+        && Math.abs(DOSE.csi(7.6,80,300,40,84,1000)-(-0.0105))<0.001;
       if(!ok&&window.console)console.warn("[Pool Console] Dosing self-check FAILED — do not trust the amounts. See tests/dosing.test.mjs.");
     }catch(e){if(window.console)console.warn("[Pool Console] Dosing self-check errored:",e);}
   })();
@@ -1747,7 +1916,7 @@
   function shockShort(){return $("shockProduct")?PRODNAMES[$("shockProduct").value]:"cal-hypo";}
   function updateSetupChips(){
     var method=saltOn()?"saltwater cell":pucksOn()?("pucks · refill "+puckDays()+"d"):"manual chlorine";
-    var c=[(num("vol")||10000).toLocaleString()+" gal",DOSE.SURFACES[surface].label,method,prodShort(),"shock: "+shockShort(),season==="open"?"opening":season==="close"?"closing":"summer"];
+    var c=[(num("vol")||10000).toLocaleString()+" gal",DOSE.SURFACES[surface].label,method,prodShort(),"shock: "+shockShort(),season==="open"?"opening":season==="close"?"closing":"summer",DOSE.STRATEGIES[strategy].label];
     $("setupChips").innerHTML=c.map(function(x){return"<span>"+x+"</span>";}).join("");
   }
   /* Puck-feeder guidance: pucks/week for this volume, and the CYA cost. */
@@ -1767,10 +1936,52 @@
     $("puckNote").innerHTML=html;
   }
   function updateSeasonTip(){var s=SEASON[season];$("seasonTip").querySelector("use").setAttribute("href","#i-"+s.ic);$("seasonTipTxt").innerHTML=s.txt;}
+  /* Cheapest honest way to buy +1 ppm FC. Excludes trichlor (too slow for a
+   * dose) and dichlor (the CYA it adds is a hidden cost you pay in drained
+   * water later — cheap per pound, expensive per season). */
+  function cheapestChlorine(vol){
+    var best=null;
+    Object.keys(CL).forEach(function(k){
+      var p=CL[k];if(p.slow||p.addsCYA)return;
+      var c=DOSE.costPerPpm(k,vol);
+      if(!best||c<best.c)best={k:k,c:c,label:p.label};
+    });
+    return best;
+  }
+  var STRATTIP={
+    steady:{ic:"check",txt:"<b>Balanced</b> — the sensible default. FC target at <b>7.5% of CYA</b>, test every 2–3 days in summer, dose to target each time. Best water for the least fuss."},
+    crystal:{ic:"sparkle",txt:"<b>Crystal-clear</b> — resort water. FC target raised to <b>9% of CYA</b> so it never drifts near the floor, test FC <b>daily</b> in season, keep pH pinned 7.4–7.6, brush weekly even when it looks perfect. Spends a little more chlorine; the water shows it."},
+    thrifty:{},
+    easy:{ic:"clock",txt:"<b>Low effort</b> — let hardware do the daily work. FC target nudged to <b>8.5% of CYA</b> so a missed test never dips you under the algae floor. Test just 2×/week, run a weekly polyquat dose in peak heat as cheap insurance."}
+  };
+  function updateStrategyUI(){
+    document.querySelectorAll('#strategySeg [data-strategy]').forEach(function(b){b.setAttribute("aria-pressed",b.getAttribute("data-strategy")===strategy?"true":"false");});
+    var tip=$("strategyTipTxt");if(!tip)return;
+    if(strategy==="thrifty"){
+      var vol=num("vol")||10000,best=cheapestChlorine(vol),cur=DOSE.costPerPpm($("product").value,vol);
+      var txt="<b>Save money</b> — same targets (an algae bloom is the most expensive thing in pool care, so the floor never moves); the savings come from habits: <b>cover on whenever idle</b> (sun eats about half your chlorine), dose at dusk, never stockpile liquid chlorine (it fades in weeks), buy the keepers at fall closeout, and skip dichlor even when the per-pound price looks great — the CYA it adds costs you water changes later.";
+      if(best&&cur>best.c*1.15&&!CL[$("product").value].slow){
+        var cv=COVER[cover]||1,save=(cur-best.c)*300*cv;
+        txt+=" <b>Quick win:</b> switching top-ups from "+CL[$("product").value].label+" ($"+cur.toFixed(2)+"/ppm here) to "+best.label+" ($"+best.c.toFixed(2)+"/ppm) saves roughly <b>$"+Math.round(save)+" a season</b> in this pool.";
+      }else if(best){
+        txt+=" Your current top-up product is already the cheap way to buy chlorine here ($"+cur.toFixed(2)+" per +1 ppm).";
+      }
+      txt+=" Check any shelf price on the <b>Buy</b> tab's price checker before you grab it.";
+      tip.innerHTML=txt;$("strategyTip").querySelector("use").setAttribute("href","#i-tag");
+    }else{
+      var s=STRATTIP[strategy]||STRATTIP.steady,extra="";
+      if(strategy==="easy"&&!pucksOn()&&!saltOn())extra=" <b>Turn on the puck feeder above</b> (or a salt cell) and this app plans the weekly load and sets the refill reminder.";
+      if(strategy==="crystal")extra+=" Optional pro touch: <b>30–50 ppm borates</b> add sparkle and slow pH drift — a once-a-season addition.";
+      tip.innerHTML=s.txt+extra;$("strategyTip").querySelector("use").setAttribute("href","#i-"+s.ic);
+    }
+  }
   function updateCheat(){
     var salt=saltOn(),T=targets(salt);
-    var fcText=salt?"6% of CYA (~4 at 70)":"7.5% of CYA (~3 at 40)";
-    var rows=[{ic:"droplet",n:"Free chlorine",v:fcText},{ic:"flask",n:"pH",v:"7.4 – 7.8"},{ic:"scale",n:"Alkalinity",v:T.ta.min+" – "+T.ta.max+" ppm"},{ic:"shield",n:"Stabilizer (CYA)",v:T.cya.min+" – "+T.cya.max+" ppm"},{ic:"gem",n:"Calcium",v:T.ch.min+" – "+T.ch.max+(T.ch.optional?" (optional)":" ppm")}];
+    var st=DOSE.STRATEGIES[strategy]||DOSE.STRATEGIES.steady;
+    var pct=Math.round((salt?st.fcMulSalt:st.fcMul)*1000)/10;
+    var fcText=salt?pct+"% of CYA (~"+r1(70*pct/100)+" at 70)":pct+"% of CYA (~"+r1(40*pct/100)+" at 40)";
+    var cadence={steady:"every 2–3 days (summer)",crystal:"FC daily, full test weekly",thrifty:"every 2–3 days (summer)",easy:"2× a week"}[strategy];
+    var rows=[{ic:"droplet",n:"Free chlorine",v:fcText},{ic:"flask",n:"pH",v:"7.4 – 7.8"},{ic:"scale",n:"Alkalinity",v:T.ta.min+" – "+T.ta.max+" ppm"},{ic:"shield",n:"Stabilizer (CYA)",v:T.cya.min+" – "+T.cya.max+" ppm"},{ic:"gem",n:"Calcium",v:T.ch.min+" – "+T.ch.max+(T.ch.optional?" (optional)":" ppm")},{ic:"vial",n:"Test rhythm",v:cadence}];
     $("targetsGrid").innerHTML=rows.map(function(r){return '<div class="tgt">'+ic(r.ic)+'<div><div class="tg-name">'+r.n+'</div><div class="tg-val">'+r.v+'</div></div></div>';}).join("");
   }
 
@@ -1814,7 +2025,8 @@
           :(surface==="plaster"?"<b>Plaster genuinely needs this.</b> Calcium-hungry water dissolves it out of the finish — etching and pitting you can't undo. Pre-dissolve in a bucket and pour around the pool.":"Low calcium is gentler on fiberglass than plaster, but chronically soft water can dull the gelcoat — bring it into range.");
         if(ozC>80)chWhy+=" <b>That's a big dose</b> — calcium chloride heats up as it dissolves, so add it in thirds a few hours apart, re-testing between rounds.";
         plan.push({key:"ch",seq:"03",icon:"gem",name:"Calcium",status:(chOpt||ch>=T.ch.min*0.8)?"warn":"alert",reading:"Now <b>"+ch+"</b> · target <b>"+T.ch.ideal+"</b> ppm",action:{ic:"plus",what:"Add calcium chloride"+(chOpt?" (optional)":""),h:fC.h,t:fC.t,prod:chOpt?"vinyl doesn't require it":"pre-dissolve · protects your "+surfLabel,cost:costStr(ozC,0.20)},wait:"2–4 hrs",why:chWhy});}
-      else if(ch>T.ch.max+TOL.ch){plan.push({key:"ch",seq:"03",icon:"gem",name:"Calcium",status:ch>T.ch.max*1.4?"alert":"warn",reading:"Now <b>"+ch+"</b> · target <b>"+T.ch.ideal+"</b> ppm",action:{ic:"plus",what:"Dilute to lower",h:"Partial drain + refill",t:"Partial drain + refill",prod:"no chemical lowers calcium",cost:""},wait:"—",why:"High calcium can cloud or scale"+(surface==="plaster"?" — on plaster, keep pH at the low end of range (7.4) until it's diluted down":"")+". Only fresh water brings it down."+stripNote("ch",ch)});}
+      else if(ch>T.ch.max+TOL.ch){var chPct=Math.round(DOSE.drainPct(ch,T.ch.ideal)*100),chGal=Math.round(vol*chPct/100/50)*50;
+        plan.push({key:"ch",seq:"03",icon:"gem",name:"Calcium",status:ch>T.ch.max*1.4?"alert":"warn",reading:"Now <b>"+ch+"</b> · target <b>"+T.ch.ideal+"</b> ppm",action:{ic:"plus",what:"Dilute to lower",h:"Swap ~"+chPct+"% of the water (≈"+chGal.toLocaleString()+" gal)",t:"Swap ~"+chPct+"% of the water (~"+chGal.toLocaleString()+" gal)",prod:"no chemical lowers calcium",cost:""},wait:"—",why:"High calcium can cloud or scale"+(surface==="plaster"?" — on plaster, keep pH at the low end of range (7.4) until it's diluted down":"")+". Only fresh water brings it down: draining "+chPct+"% and refilling takes "+ch+" to about "+T.ch.ideal+". Do it in stages if your fill water is hard too."+stripNote("ch",ch)});}
       else if(ch<T.ch.min||ch>T.ch.max)plan.push(closeStep("ch","03","gem","Calcium",ch," ppm",T.ch.min,T.ch.max,TOL.ch));
       else plan.push({key:"ch",seq:"03",icon:"gem",name:"Calcium",status:"good",reading:"<b>"+ch+"</b> ppm",good:true,compact:chOpt?"Fine — not worth fussing over on vinyl.":"In range — protecting your "+surfLabel+"."});
     }
@@ -1825,7 +2037,9 @@
         plan.push({key:"cya",seq:"04",icon:"shield",name:"Stabilizer",status:low?"alert":"warn",reading:"Now <b>"+cya+"</b> · target <b>"+T.cya.ideal+"</b> ppm",action:{ic:"plus",what:"Add cyanuric acid",h:fY.h,t:fY.t,prod:"conditioner · sock in skimmer basket",cost:costStr(ozY,0.30)},wait:"~1 week",why:cyaWhy});}
       else if(cya>T.cya.max+TOL.cya){
         var cyaHiWhy="High CYA throttles chlorine — your FC targets climb with it. If well over range, swap out some water, then keep it from climbing back."+(pucksOn()?" <b>Your puck feeder is what's pushing it up</b>: dial it back or pull the pucks, and cover demand with liquid chlorine (adds zero CYA) until you're back in range.":" Use liquid chlorine (zero CYA) instead of trichlor/dichlor to stop the climb.")+stripNote("cya",cya)+" <em>Before draining water over this, confirm with a drop-kit CYA test — strips read CYA crudely.</em>";
-        plan.push({key:"cya",seq:"04",icon:"shield",name:"Stabilizer",status:cya>(salt?110:80)?"alert":"warn",reading:"Now <b>"+cya+"</b> · target <b>"+T.cya.ideal+"</b> ppm",action:{ic:"plus",what:"Dilute to lower",h:"Partial drain + refill",t:"Partial drain + refill",prod:"no chemical removes CYA",cost:""},wait:"—",why:cyaHiWhy});}
+        var cyaPct=Math.round(DOSE.drainPct(cya,T.cya.ideal)*100),cyaGal=Math.round(vol*cyaPct/100/50)*50;
+        cyaHiWhy="Draining <b>"+cyaPct+"%</b> and refilling takes "+cya+" to about "+T.cya.ideal+". "+cyaHiWhy;
+        plan.push({key:"cya",seq:"04",icon:"shield",name:"Stabilizer",status:cya>(salt?110:80)?"alert":"warn",reading:"Now <b>"+cya+"</b> · target <b>"+T.cya.ideal+"</b> ppm",action:{ic:"plus",what:"Dilute to lower",h:"Swap ~"+cyaPct+"% of the water (≈"+cyaGal.toLocaleString()+" gal)",t:"Swap ~"+cyaPct+"% of the water (~"+cyaGal.toLocaleString()+" gal)",prod:"no chemical removes CYA",cost:""},wait:"—",why:cyaHiWhy});}
       else if(cya<T.cya.min||cya>T.cya.max)plan.push(closeStep("cya","04","shield","Stabilizer",cya," ppm",T.cya.min,T.cya.max,TOL.cya));
       else plan.push({key:"cya",seq:"04",icon:"shield",name:"Stabilizer",status:"good",reading:"<b>"+cya+"</b> ppm",good:true,compact:"Good — this sets your chlorine target."+(pucksOn()?" Watch it monthly; pucks keep nudging it up.":"")});
     }
@@ -2499,6 +2713,94 @@
   }
   document.querySelectorAll(".tabbar button").forEach(function(b){b.addEventListener("click",function(){setTab(b.getAttribute("data-tab"));snd("tap");});});
 
+  /* ---- PRO TOOLS: CSI · what-if · price check · volume calc ---- */
+  function csiVerdict(v){if(v<-0.6)return["alert","aggressive"];if(v<-0.3)return["warn","corrosive"];if(v<=0.3)return["good","balanced"];if(v<=0.6)return["warn","scale-forming"];return["alert","heavy scale"];}
+  function updateCsi(){
+    var el=$("csiOut");if(!el)return;
+    var ph=num("ph"),ta=num("ta"),ch=num("ch"),cya=num("cya");
+    if(ph==null||ta==null||ch==null){el.innerHTML='<p class="skip-note" style="margin:2px 0 0;">Waiting on readings — CSI needs <b>pH</b>, <b>alkalinity</b>, and <b>calcium</b> from the panel above (stabilizer sharpens it).</p>';return;}
+    var v=DOSE.csi(ph,ta,ch,cya,num("csiTemp"),num("csiTds"));
+    var vd=csiVerdict(v),vv=(Math.round(v*100)/100).toFixed(2),pos=clamp((v+1)/2*100,2,98);
+    var advice;
+    if(v<-0.3)advice=surface==="plaster"
+      ?"<b>Etching territory.</b> This water is hungry — it's dissolving calcium out of your plaster right now, and etching can't be undone. Follow the dose list: raising pH, alkalinity, and calcium all push CSI up, and pH is the strongest lever."
+      :(surface==="fiberglass"
+        ?"Nothing to etch on fiberglass, but corrosive water is hard on metal — heater cores, ladder anchors, pump seals. Worth nudging pH, alkalinity, or calcium up."
+        :"A vinyl liner can't etch, but corrosive water still eats the metal parts — heater, ladder, seals. Nudge pH or alkalinity up a touch.");
+    else if(v>0.3)advice="<b>Scale wants to form</b> — rough deposits, cloudy water, crust at the waterline"+(saltOn()?", and plating inside the salt cell (the #1 cell killer)":"")+". Lower pH toward 7.4 first — it's the fastest lever — then re-check.";
+    else advice="In the happy zone — calcium stays dissolved, nothing etches, nothing scales."+(surface==="plaster"?" Exactly where plaster wants to live.":"");
+    el.innerHTML='<div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;"><b style="font-family:var(--display);font-size:1.5rem;">'+(v>0?"+":"")+vv+'</b><span class="pill '+vd[0]+'">'+vd[1]+'</span></div>'
+      +'<div style="position:relative;height:10px;border-radius:6px;margin:10px 0 4px;background:linear-gradient(90deg,var(--alert) 0%,var(--warn) 28%,var(--good) 40%,var(--good) 60%,var(--warn) 72%,var(--alert) 100%);"><i style="position:absolute;left:'+pos+'%;top:-3px;width:3px;height:16px;background:var(--ink-strong);border-radius:2px;transform:translateX(-50%);"></i></div>'
+      +'<div style="display:flex;justify-content:space-between;font-family:var(--mono);font-size:.68rem;color:var(--ink-faint);"><span>−1 corrosive</span><span>0</span><span>+1 scale</span></div>'
+      +'<p class="skip-note" style="margin:8px 0 0;">'+advice+'</p>';
+  }
+  var FXLABEL={fc:"Free chlorine",cya:"Stabilizer (permanent)",ch:"Calcium",ta:"Alkalinity",ph:"pH"};
+  function updateFx(){
+    var el=$("fxOut");if(!el)return;
+    var item=$("fxItem").value,amt=num("fxAmt"),mult=parseFloat($("fxUnit").value)||1,vol=num("vol")||10000;
+    if(amt==null||amt<=0){el.innerHTML='<p class="skip-note" style="margin:2px 0 0;">Enter an amount to preview its effect before you pour.</p>';return;}
+    var e;try{e=DOSE.effectOf(item,amt*mult,vol);}catch(err){el.innerHTML="";return;}
+    var rows=Object.keys(e).map(function(k){
+      var d=e[k],now=num(k);
+      var dTxt=(d>=0?"+":"−")+(k==="ph"?Math.abs(d).toFixed(2):r1(Math.abs(d)))+(k==="ph"?"":" ppm");
+      var after=now!=null?(k==="ph"?(Math.round((now+d)*100)/100):r1(now+d)):null;
+      return '<div class="tgt"><svg class="ic"><use href="#i-'+ICON[k]+'"/></svg><div><div class="tg-name">'+FXLABEL[k]+'</div><div class="tg-val">'+dTxt+(after!=null?' <span style="color:var(--ink-faint);font-weight:400;">('+now+' → '+after+')</span>':'')+'</div></div></div>';
+    }).join("");
+    var warn="";
+    if(e.fc){var nowFc=num("fc"),b=fcBand(num("cya"),saltOn());
+      if(nowFc!=null&&nowFc+e.fc>b.shock+2)warn+='<p class="skip-note" style="margin:8px 0 0;color:var(--alert);">That lands FC around '+r1(nowFc+e.fc)+' ppm — beyond shock level ('+b.shock+'). Only on purpose, and no swimming until it falls back under ~5.</p>';}
+    if(item==="dichlor"||item==="trichlor")warn+='<p class="skip-note" style="margin:8px 0 0;">The stabilizer it adds is permanent — only a water change removes it.</p>';
+    if(item==="acid")warn+='<p class="skip-note" style="margin:8px 0 0;">pH move assumes alkalinity ≈ 80 — higher TA blunts it, lower TA amplifies it.</p>';
+    el.innerHTML='<div class="targets-grid">'+rows+'</div>'+warn;
+  }
+  function updatePriceCheck(){
+    var el=$("pcOut");if(!el)return;
+    var vol=num("vol")||10000;
+    var bench=Object.keys(CL).filter(function(k){return !CL[k].slow;}).map(function(k){return {k:k,c:DOSE.costPerPpm(k,vol),label:PRODNAMES[k]||CL[k].label};}).sort(function(a,b){return a.c-b.c;});
+    var benchTxt="Rough going rates for this pool: "+bench.map(function(b){return b.label+" <b>$"+b.c.toFixed(2)+"</b>";}).join(" · ")+" per +1 ppm. Dichlor (and trichlor) look cheap per pound but add permanent CYA — budget the eventual water change into their price.";
+    var prod=$("pcProd").value,price=num("pcPrice"),size=num("pcSize"),mult=parseFloat($("pcUnit").value)||1,h="";
+    if(price>0&&size>0){
+      var c=DOSE.customCostPerPpm(prod,price,size*mult,vol),best=bench.filter(function(b){return !CL[b.k].addsCYA;})[0]||bench[0];
+      var verdict,cls;
+      if(c<=best.c*1.05){verdict="Good deal — that's the cheapest chlorine in town for this pool.";cls="good";}
+      else if(c<=best.c*1.35){verdict="Fair — usable, but "+best.label+" at typical prices beats it (≈$"+best.c.toFixed(2)+"/ppm).";cls="warn";}
+      else{verdict="Pass — that's ~"+r1(c/best.c)+"× the going rate. "+best.label+" runs about $"+best.c.toFixed(2)+" per ppm here.";cls="alert";}
+      h='<div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:6px;"><b style="font-family:var(--display);font-size:1.4rem;">$'+c.toFixed(2)+'</b><span style="color:var(--ink-soft);font-size:.85rem;">per +1 ppm FC in your '+vol.toLocaleString()+' gal</span><span class="pill '+cls+'">'+(cls==="good"?"buy":cls==="warn"?"fair":"skip")+'</span></div><p class="skip-note" style="margin:0;">'+verdict+'</p>';
+      if(CL[prod].addsCYA)h+='<p class="skip-note" style="margin:6px 0 0;color:var(--amber-ink);">Plus baggage: every +1 ppm FC from this also locks in ~'+(prod==="trichlor"?"0.6":"0.9")+' ppm of permanent CYA.</p>';
+      if(CL[prod].addsCH&&surface==="plaster")h+='<p class="skip-note" style="margin:6px 0 0;color:var(--amber-ink);">Cal-hypo also adds calcium — fine until CH runs high on plaster; watch your CSI.</p>';
+    }
+    el.innerHTML=h+'<p class="skip-note" style="margin:'+(h?"10":"2")+'px 0 0;">'+benchTxt+'</p>';
+  }
+  function vcUpdate(){
+    if(!$("vcShape"))return 0;
+    var shape=$("vcShape").value;
+    $("vcALbl").textContent=shape==="round"?"Diameter":"Length";
+    $("vcBWrap").hidden=shape==="round";
+    var a=num("vcA")||0,b=num("vcB")||0,d=num("vcDepth")||0,g=0;
+    if(shape==="round")g=a*a*d*5.9;
+    else if(shape==="oval")g=a*b*d*5.9;
+    else g=a*b*d*7.5;
+    g=Math.round(g/50)*50;
+    $("vcOut").textContent=g>0?("≈ "+g.toLocaleString()+" gal"):"—";
+    return g;
+  }
+  if($("volCalcBtn"))$("volCalcBtn").addEventListener("click",function(){var vc=$("volCalc");vc.hidden=!vc.hidden;if(!vc.hidden)vcUpdate();snd("tap");});
+  ["vcA","vcB","vcDepth"].forEach(function(id){if($(id))$(id).addEventListener("input",vcUpdate);});
+  if($("vcShape"))$("vcShape").addEventListener("change",vcUpdate);
+  if($("vcUse"))$("vcUse").addEventListener("click",function(){var g=vcUpdate();if(g>0){$("vol").value=g;inputsChanged();toast("Volume set to "+g.toLocaleString()+" gal");snd("log");}else toast("Enter the dimensions first");});
+  ["csiTemp","csiTds"].forEach(function(id){if($(id))$(id).addEventListener("input",updateCsi);});
+  ["fxAmt"].forEach(function(id){if($(id))$(id).addEventListener("input",updateFx);});
+  ["fxItem","fxUnit"].forEach(function(id){if($(id))$(id).addEventListener("change",updateFx);});
+  if($("pcPrice"))$("pcPrice").addEventListener("input",updatePriceCheck);
+  if($("pcSize"))$("pcSize").addEventListener("input",updatePriceCheck);
+  ["pcProd","pcUnit"].forEach(function(id){if($(id))$(id).addEventListener("change",updatePriceCheck);});
+  if($("strategySeg"))$("strategySeg").addEventListener("click",function(e){
+    var b=e.target.closest("[data-strategy]");if(!b)return;
+    strategy=b.getAttribute("data-strategy");if(!DOSE.STRATEGIES[strategy])strategy="steady";
+    refreshBars();syncHints();paintScale(num("cya")===null?parseFloat($("sigCya").value)||40:num("cya"));
+    inputsChanged();snd("tap");
+  });
+
   /* ---- input wiring ---- */
   function updateCC(){
     var el=$("ccLine");if(!el)return;
@@ -2510,7 +2812,7 @@
   }
   /* Pool setup persists on this device so it survives a reload. */
   function saveSetup(){
-    lsSet("poolSetup",{vol:num("vol"),product:$("product").value,shock:$("shockProduct")?$("shockProduct").value:"calhypo",salt:saltOn(),surface:surface,pucks:pucksOn(),puckDays:puckDays(),season:season,cover:cover});
+    lsSet("poolSetup",{vol:num("vol"),product:$("product").value,shock:$("shockProduct")?$("shockProduct").value:"calhypo",salt:saltOn(),surface:surface,strategy:strategy,pucks:pucksOn(),puckDays:puckDays(),season:season,cover:cover});
   }
   function loadSetup(){
     var s=lsGet("poolSetup");if(!s)return;
@@ -2519,12 +2821,13 @@
     if(s.shock&&CL[s.shock]&&$("shockProduct"))$("shockProduct").value=s.shock;
     $("salt").checked=!!s.salt;
     if(s.surface&&DOSE.SURFACES[s.surface]){surface=s.surface;if($("surface"))$("surface").value=s.surface;}
+    if(s.strategy&&DOSE.STRATEGIES[s.strategy])strategy=s.strategy;
     if($("pucks"))$("pucks").checked=!!s.pucks;
     if(s.puckDays>=2&&s.puckDays<=21&&$("puckDays"))$("puckDays").value=Math.round(s.puckDays);
     if(s.season==="open"||s.season==="peak"||s.season==="close"){season=s.season;document.querySelectorAll('.seg [data-season]').forEach(function(x){x.setAttribute("aria-pressed",x.getAttribute("data-season")===season?"true":"false");});}
     if(s.cover&&COVER[s.cover]){cover=s.cover;document.querySelectorAll("#coverSeg button").forEach(function(x){x.setAttribute("aria-pressed",x.getAttribute("data-cover")===cover?"true":"false");});}
   }
-  function inputsChanged(){updateSetupChips();updateCheat();updateSupplies();updatePump();updateMustard();updatePuckUI();paintAllRows();saveSetup();}
+  function inputsChanged(){updateSetupChips();updateCheat();updateSupplies();updatePump();updateMustard();updatePuckUI();updateStrategyUI();updateCsi();updateFx();updatePriceCheck();paintAllRows();saveSetup();}
   ["vol","product"].forEach(function(id){$(id).addEventListener("input",inputsChanged);});
   $("product").addEventListener("change",inputsChanged);
   if($("shockProduct"))$("shockProduct").addEventListener("change",inputsChanged);
@@ -2822,7 +3125,7 @@
   /* ---- init ---- */
   loadSetup();
   paintScale(40);refreshBars();syncHints();updateSetupChips();updateSeasonTip();updateCheat();
-  updateSupplies();renderGear();updatePump();updatePuckUI();renderMinders();buildDecon();updateMustard();renderAlmanac();migrateLog();renderTrends();setMode("balance");
+  updateSupplies();renderGear();updatePump();updatePuckUI();updateStrategyUI();updateCsi();updateFx();updatePriceCheck();renderMinders();buildDecon();updateMustard();renderAlmanac();migrateLog();renderTrends();setMode("balance");
   /* ---- appearance: dark/light/auto + dynamic text size ---- */
   var PREF={theme:"auto",scale:100};
   try{var pt=localStorage.getItem("poolTheme");if(pt==="light"||pt==="dark"||pt==="auto")PREF.theme=pt;}catch(e){}

@@ -96,6 +96,95 @@ test("calcium band follows the pool surface", () => {
   assert.deepEqual(plaster.cya, vinyl.cya);
 });
 
+test("care strategies move the FC target inside the band, never the safety lines", () => {
+  const base = DOSE.fcBand(40, false);           // steady default: 7.5%
+  const crystal = DOSE.fcBand(40, false, "crystal"); // 9%
+  const thrifty = DOSE.fcBand(40, false, "thrifty"); // same as steady — savings come from habits, not lower FC
+  const easy = DOSE.fcBand(40, false, "easy");   // 8.5% margin for less-frequent testing
+  near(base.ideal, 3);
+  near(crystal.ideal, 3.6);
+  near(thrifty.ideal, 3);
+  near(easy.ideal, 3.4);
+  // Floor and shock are SAFETY lines — identical in every strategy.
+  for (const b of [base, crystal, thrifty, easy]) {
+    near(b.min, 2);
+    near(b.max, 4);
+    assert.equal(b.shock, 16);
+  }
+  // Salt variants.
+  near(DOSE.fcBand(70, true, "crystal").ideal, 4.9); // 70*0.07
+  near(DOSE.fcBand(70, true, "easy").ideal, 4.6);    // 70*0.065, rounded to 0.1
+  // Unknown strategy falls back to steady.
+  near(DOSE.fcBand(40, false, "yolo").ideal, 3);
+  // No-CYA fallback band ignores strategy (it's already a fixed floor case).
+  assert.equal(DOSE.fcBand(0, false, "crystal").ideal, 2);
+});
+
+test("CSI (calcite saturation index) matches hand-computed Langelier values", () => {
+  const close = (got, want) => assert.ok(Math.abs(got - want) < 0.005, `expected ~${want}, got ${got}`);
+  // Balanced summer water: pH 7.6, TA 80, CH 300, CYA 40, 84°F, TDS 1000.
+  close(DOSE.csi(7.6, 80, 300, 40, 84, 1000), -0.0105);
+  // Fresh-fill vinyl water in spring: corrosive.
+  close(DOSE.csi(7.2, 70, 150, 40, 60, 1000), -1.0394);
+  // Hot, high-everything water: scale-forming.
+  close(DOSE.csi(8.0, 120, 450, 0, 88, 1000), 0.8626);
+  // The Orenda winterization case: same-ish chemistry, 40°F water goes aggressive.
+  close(DOSE.csi(7.5, 80, 350, 30, 40, 1000), -0.5033);
+  // Defaults: temp omitted → 84°F, TDS omitted → 1000.
+  close(DOSE.csi(7.6, 80, 300, 40, null, null), DOSE.csi(7.6, 80, 300, 40, 84, 1000));
+});
+
+test("dilution math: fraction of water to swap", () => {
+  near(DOSE.drainPct(100, 50), 0.5);
+  near(DOSE.drainPct(80, 40), 0.5);
+  near(DOSE.drainPct(120, 40), 2 / 3);
+  // Already at/below target, or junk input → no drain.
+  near(DOSE.drainPct(40, 50), 0);
+  near(DOSE.drainPct(0, 50), 0);
+  near(DOSE.drainPct(NaN, 50), 0);
+});
+
+test("effects-of-adding inverts the dose math exactly", () => {
+  // 21 fl oz of 12.5% liquid in 10k gal = the +2 ppm golden dose, inverted.
+  near(DOSE.effectOf("liq125", 21, 10000).fc, 2);
+  // Dichlor: +1 ppm FC brings 0.9 ppm CYA along.
+  const d = DOSE.effectOf("dichlor", 2.4, 10000);
+  near(d.fc, 1); near(d.cya, 0.9);
+  // Trichlor: 0.61 ppm CYA per ppm FC (one 8-oz puck).
+  const t = DOSE.effectOf("trichlor", 8, 10000);
+  near(t.fc, 16 / 3); near(t.cya, (16 / 3) * 0.61);
+  // Cal-hypo: ~0.7 ppm CH per ppm FC.
+  const c = DOSE.effectOf("calhypo", 4, 10000);
+  near(c.fc, 2); near(c.ch, 1.4);
+  // Dry balance chems invert their dose functions.
+  near(DOSE.effectOf("bakingsoda", 48, 10000).ta, 20);
+  near(DOSE.effectOf("cyagran", 26, 10000).cya, 20);
+  near(DOSE.effectOf("calchl", 92, 10000).ch, 50);
+  // Acid: both the pH move and the TA side-effect.
+  const a = DOSE.effectOf("acid", 16, 10000);
+  near(a.ph, -0.4); near(a.ta, -6.2);
+  // Soda ash: pH up and the TA it drags along.
+  const s = DOSE.effectOf("sodaash", 12, 10000);
+  near(s.ph, 0.4); near(s.ta, 8.4);
+  // Volume scaling.
+  near(DOSE.effectOf("liq125", 21, 20000).fc, 1);
+  // Unknown item throws — never a silent zero.
+  assert.throws(() => DOSE.effectOf("mystery_powder", 10, 10000), /Unknown item/);
+});
+
+test("cost per +1 ppm FC: built-in benchmarks and shelf-price checks", () => {
+  // Built-in rough prices: per-oz cost × oz-per-ppm × volume factor.
+  near(DOSE.costPerPpm("liq125", 10000), 10.5 * 0.06);
+  near(DOSE.costPerPpm("calhypo", 10000), 2.0 * 0.30);
+  near(DOSE.costPerPpm("liq125", 20000), 10.5 * 0.06 * 2);
+  // A $5 gallon (128 fl oz) of 12.5%: 10.5 oz/ppm × $0.0390625/oz ≈ $0.41/ppm.
+  near(DOSE.customCostPerPpm("liq125", 5, 128, 10000), 10.5 * (5 / 128));
+  // Junk price/size → null, not NaN.
+  assert.equal(DOSE.customCostPerPpm("liq125", 0, 128, 10000), null);
+  assert.equal(DOSE.customCostPerPpm("liq125", 5, 0, 10000), null);
+  assert.throws(() => DOSE.costPerPpm("nope", 10000), /Unknown chlorine product/);
+});
+
 test("test-resolution tolerances are locked (the anti-annoyance layer)", () => {
   // These decide when the app says "within test tolerance — no dose" instead
   // of prescribing a correction a home test couldn't even verify. Widening
