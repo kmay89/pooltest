@@ -8,9 +8,18 @@ plus seasonal supplies, care routines, trends, and fix-it playbooks.
 
 ![Pool Water Console](og-image.png)
 
-It's tuned out of the box for a **21 ft above-ground vinyl pool (~10,000 gal)**
-running tablet chlorine, but every target adapts to your pool from **Pool setup**
-on the Dose tab (volume, chlorine product, salt cell, season).
+Defaults assume a **~10,000 gal vinyl pool**, but every target adapts to your
+pool from **Pool setup** on the Dose tab: volume, **surface** (vinyl liner,
+fiberglass, or plaster/gunite — it moves the calcium band), how you chlorinate
+day-to-day (liquid/granular by hand, **trichlor pucks in a feeder or floater**
+with a refill reminder, or a salt cell), chlorine products, and season. The
+setup is remembered on your device.
+
+Dosing is **test-tolerance aware**: a reading within one test-step of a band
+edge (±0.5 FC, ±0.1 pH, ±10 TA/CYA, ±25 CH) is reported as *"within test
+tolerance"* instead of prescribing a micro-dose your strip couldn't verify —
+and when a strip bottle's generic "OK" range disagrees with the computed
+target, the dose list says so and explains why.
 
 ---
 
@@ -130,9 +139,16 @@ well-established pool-chemistry constants:
 - **Chlorine:** ~10.5 fl oz of 12.5 % liquid per +1 ppm FC / 10k gal
   (and the equivalent for 10 %/8.25 %/6 % bleach, 65 % cal-hypo, 56 % dichlor).
 - **Alkalinity:** 24 oz (1.5 lb) baking soda per +10 ppm / 10k gal.
-- **pH:** ~8 fl oz muriatic acid (31.45 %) per −0.2 pH; ~6 oz soda ash per +0.2 pH / 10k gal.
+- **pH:** ~8 fl oz muriatic acid (31.45 %) per −0.2 pH at TA 80, scaled by the
+  measured TA (÷80, clamped 0.6–1.5× — more buffer needs more acid); ~6 oz soda
+  ash per +0.2 pH / 10k gal.
 - **Stabilizer:** 13 oz cyanuric acid per +10 ppm / 10k gal.
-- **Calcium:** ~1.84 oz calcium chloride per +1 ppm / 10k gal (low priority on vinyl).
+- **Calcium:** ~1.84 oz calcium chloride per +1 ppm / 10k gal. Target band
+  follows the surface: vinyl 150–250 (optional), fiberglass 220–320,
+  plaster/gunite 250–450.
+- **Pucks:** a 3″ trichlor tablet (8 oz, 90 %) adds ~5.3 ppm FC and ~3.3 ppm
+  permanent CYA per 10k gal; the feeder planner assumes ~2.5 ppm/day summer
+  demand.
 - **Pump/fill:** turnover = volume ÷ GPM; gal-per-inch = π·r²·(1/12)·7.48 for a
   round pool; pump cost = volts × amps ÷ 1000 × hours × rate.
 

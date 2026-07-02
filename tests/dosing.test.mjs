@@ -53,9 +53,14 @@ test("chlorine product table: locked strengths, costs and flags", () => {
   assert.equal(CL.bleach6.per, 21);
   assert.equal(CL.calhypo.per, 2.0);
   assert.equal(CL.dichlor.per, 2.4);
+  assert.equal(CL.trichlor.per, 1.5);
   // Side-effect flags that change the dose plan's wording must stay put.
   assert.equal(CL.calhypo.addsCH, true);
   assert.equal(CL.dichlor.addsCYA, true);
+  assert.equal(CL.trichlor.addsCYA, true);
+  // Trichlor dissolves over days — it must stay flagged slow so the UI never
+  // offers it for a "raise FC now" dose.
+  assert.equal(CL.trichlor.slow, true);
   assert.ok(!CL.liq125.addsCYA && !CL.liq125.addsCH);
 });
 
@@ -63,13 +68,52 @@ test("balance targets: fresh-water vs salt-cell bands", () => {
   const fresh = DOSE.targets(false);
   assert.deepEqual(fresh.ph, { min: 7.4, ideal: 7.6, max: 7.8 });
   assert.deepEqual(fresh.ta, { min: 70, ideal: 80, max: 90 });
-  assert.deepEqual(fresh.ch, { min: 150, ideal: 200, max: 250 });
+  assert.deepEqual(fresh.ch, { min: 150, ideal: 200, max: 250, optional: true });
   assert.deepEqual(fresh.cya, { min: 30, ideal: 40, max: 50 });
   // A salt cell shifts only the CYA band up; everything else holds.
   const salt = DOSE.targets(true);
   assert.deepEqual(salt.cya, { min: 60, ideal: 70, max: 80 });
   assert.deepEqual(salt.ph, fresh.ph);
   assert.deepEqual(salt.ta, fresh.ta);
+});
+
+test("calcium band follows the pool surface", () => {
+  // Vinyl (default) is low and optional — a liner has nothing to etch.
+  const vinyl = DOSE.targets(false, "vinyl");
+  assert.deepEqual(vinyl.ch, { min: 150, ideal: 200, max: 250, optional: true });
+  // Plaster genuinely needs calcium: 250–450, not optional.
+  const plaster = DOSE.targets(false, "plaster");
+  assert.deepEqual(plaster.ch, { min: 250, ideal: 350, max: 450, optional: false });
+  // Fiberglass sits between.
+  const fg = DOSE.targets(false, "fiberglass");
+  assert.deepEqual(fg.ch, { min: 220, ideal: 270, max: 320, optional: false });
+  // Unknown / omitted surface falls back to vinyl, never throws.
+  assert.deepEqual(DOSE.targets(false).ch, vinyl.ch);
+  assert.deepEqual(DOSE.targets(false, "concrete??").ch, vinyl.ch);
+  // Surface never moves the non-calcium bands.
+  assert.deepEqual(plaster.ph, vinyl.ph);
+  assert.deepEqual(plaster.ta, vinyl.ta);
+  assert.deepEqual(plaster.cya, vinyl.cya);
+});
+
+test("test-resolution tolerances are locked (the anti-annoyance layer)", () => {
+  // These decide when the app says "within test tolerance — no dose" instead
+  // of prescribing a correction a home test couldn't even verify. Widening
+  // them hides real problems; narrowing them nags users over noise.
+  assert.deepEqual(DOSE.TOL, { fc: 0.5, ph: 0.1, ta: 10, cya: 10, ch: 25 });
+});
+
+test("puck (3\" trichlor tablet) math for the feeder", () => {
+  // One 8-oz puck in 10k gal: 8 / 1.5 oz-per-ppm = +5.33 ppm FC…
+  near(DOSE.puckFc(10000), 16 / 3);
+  // …and 61% of that as permanent CYA: +3.25 ppm.
+  near(DOSE.puckCya(10000), (16 / 3) * 0.61);
+  // Bigger pool, smaller per-puck bump.
+  near(DOSE.puckFc(20000), 8 / 3);
+  // Summer demand of 2.5 ppm/day → 17.5 ppm/week → ~3.3 pucks/wk in 10k gal.
+  near(DOSE.pucksPerWeek(10000, 2.5), 17.5 / (16 / 3));
+  // Default demand (no arg) is the 2.5 ppm/day summer figure.
+  near(DOSE.pucksPerWeek(10000), DOSE.pucksPerWeek(10000, 2.5));
 });
 
 test("FC band scales with CYA (the one rule that matters most)", () => {
@@ -105,9 +149,25 @@ test("alkalinity dose: baking soda, 24 oz per +10 ppm / 10k gal", () => {
   near(DOSE.bakingSodaOz(80, 80, 10000), 0);   // already on target
 });
 
-test("pH down: muriatic acid, 8 fl oz per -0.2 pH / 10k gal", () => {
-  near(DOSE.acidOz(8.0, 7.6, 10000), 16); // (0.4/0.2)*8
+test("pH down: muriatic acid, 8 fl oz per -0.2 pH / 10k gal at TA 80", () => {
+  near(DOSE.acidOz(8.0, 7.6, 10000), 16); // (0.4/0.2)*8, TA omitted → assume 80
   near(DOSE.acidOz(7.8, 7.6, 10000), 8);
+});
+
+test("acid dose scales with alkalinity (more buffer needs more acid)", () => {
+  // TA 80 is the baseline — passing it changes nothing.
+  near(DOSE.acidOz(8.0, 7.6, 10000, 80), 16);
+  // TA 120 buffers 1.5× harder → 24 fl oz.
+  near(DOSE.acidOz(8.0, 7.6, 10000, 120), 24);
+  // Very low TA swings easily; the factor floors at 0.6 so a soft-buffered
+  // pool is never told to pour a full-strength dose.
+  near(DOSE.acidOz(8.0, 7.6, 10000, 40), 16 * 0.6);
+  near(DOSE.acidOz(8.0, 7.6, 10000, 10), 16 * 0.6);
+  // And it caps at 1.5× so a stale high-TA reading can't demand a mega-dose.
+  near(DOSE.acidOz(8.0, 7.6, 10000, 400), 16 * 1.5);
+  // A junk TA value falls back to the baseline, never NaN.
+  near(DOSE.acidOz(8.0, 7.6, 10000, NaN), 16);
+  near(DOSE.acidOz(8.0, 7.6, 10000, null), 16);
 });
 
 test("pH up: soda ash, 6 oz per +0.2 pH / 10k gal", () => {
@@ -138,9 +198,10 @@ test("an unknown chlorine product fails loudly, never as a silent zero dose", ()
 });
 
 test("acid also nudges TA down — that side note must stay honest", () => {
-  // An 8 fl oz acid dose drops TA ~5 ppm in 10k gal.
-  near(DOSE.taDrop(8, 10000), 5);
-  near(DOSE.taDrop(16, 10000), 10);
+  // 8 fl oz of 31.45% muriatic in 10k gal neutralizes ~3.1 ppm of alkalinity
+  // (2.37 mol HCl against CaCO3-equivalent buffer in 37,854 L).
+  near(DOSE.taDrop(8, 10000), 3.1);
+  near(DOSE.taDrop(16, 10000), 6.2);
 });
 
 test("every dose scales linearly with pool volume", () => {
