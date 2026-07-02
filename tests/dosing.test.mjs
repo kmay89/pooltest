@@ -285,6 +285,14 @@ test("puck (3\" trichlor tablet) math for the feeder", () => {
   near(DOSE.pucksPerWeek(10000, 2.5), 17.5 / (16 / 3));
   // Default demand (no arg) is the 2.5 ppm/day summer figure.
   near(DOSE.pucksPerWeek(10000), DOSE.pucksPerWeek(10000, 2.5));
+  // Feeder units come in sizes: 1" tablets are ½ oz, sticks are 8 oz like pucks.
+  near(DOSE.puckFc(10000, 0.5), 0.5 / 1.5);            // +0.33 ppm per tab
+  near(DOSE.puckCya(10000, 0.5), (0.5 / 1.5) * 0.61);
+  near(DOSE.pucksPerWeek(10000, 2.5, 0.5), 17.5 / (0.5 / 1.5)); // ~52 tabs/week
+  near(DOSE.puckFc(10000, 8), 16 / 3);                 // stick = same as a puck
+  // Omitted / junk size falls back to the 8-oz default.
+  near(DOSE.puckFc(10000, null), 16 / 3);
+  near(DOSE.puckFc(10000, -3), 16 / 3);
 });
 
 test("FC band scales with CYA (the one rule that matters most)", () => {
