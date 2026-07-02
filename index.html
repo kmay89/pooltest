@@ -1086,7 +1086,7 @@
           </div>
           <div class="pk-note" id="puckNote"></div>
         </div>
-        <div class="toggle-row"><div class="tl"><svg class="ic"><use href="#i-zap"/></svg><div>Saltwater chlorine cell<div class="desc">Shifts CYA target to 60–80 and runs chlorine a bit lower</div></div></div><label class="switch"><input type="checkbox" id="salt" /><span class="track"></span></label></div>
+        <div class="toggle-row"><div class="tl"><svg class="ic"><use href="#i-zap"/></svg><div>Saltwater chlorine cell<div class="desc">Shifts CYA target to 60–80, runs chlorine a bit lower, and adds a Salt reading row with dosing</div></div></div><label class="switch"><input type="checkbox" id="saltCell" /><span class="track"></span></label></div>
         <div class="seg mt" role="group" aria-label="Season">
           <button type="button" data-season="open" aria-pressed="false"><svg class="ic"><use href="#i-leaf"/></svg>Opening</button>
           <button type="button" data-season="peak" aria-pressed="true"><svg class="ic"><use href="#i-sun"/></svg>Summer</button>
@@ -1219,6 +1219,23 @@
       </div>
       <div id="csiOut" style="margin-top:8px;"></div>
       <p class="skip-note" style="margin:10px 0 0;"><b>Closing tip:</b> set the temp to your coldest winter water (~40°F) before you winterize — cold water drives CSI down, and water that's balanced in August can spend the winter quietly etching plaster. Balance for the winter number, not the summer one.</p>
+      </div>
+    </details>
+
+    <details class="ex" id="borCard">
+      <summary><svg class="ic lead"><use href="#i-sparkle"/></svg><span class="ttl">Borates <span style="font-weight:400;color:var(--ink-soft);">— the optional 30–50 ppm upgrade</span></span><svg class="ic chevron"><use href="#i-chevron"/></svg></summary>
+      <div class="body">
+      <p class="hint" style="margin-top:0;">The pro's finishing touch. Borates at <b>30–50 ppm</b> act as a second pH buffer that specifically resists the <em>upward</em> drift trichlor-free pools fight all summer, mildly suppress algae, and give the water that soft, sparkly "resort" feel. Like CYA, they only leave by dilution — set them once, then top up only after big water changes. You'll need <b>borate test strips</b> (LaMotte) to measure them.</p>
+      <div class="calc2">
+        <div class="field"><label for="borCur">Current borates <span class="meta">ppm · 0 if never added</span></label><input type="number" id="borCur" inputmode="decimal" value="0" step="5" min="0" /></div>
+        <div class="field"><label for="borTarget">Target <span class="meta">ppm · 50 max</span></label><input type="number" id="borTarget" inputmode="decimal" value="40" step="5" min="0" max="50" /></div>
+      </div>
+      <div class="seg mini" role="group" aria-label="Borate product" id="borProd" style="margin-top:8px;max-width:340px;">
+        <button type="button" data-bp="borax" aria-pressed="true">Borax + acid (cheap)</button>
+        <button type="button" data-bp="boric" aria-pressed="false">Boric acid (easy)</button>
+      </div>
+      <div id="borOut" style="margin-top:10px;"></div>
+      <p class="skip-note" style="margin:10px 0 0;"><b>Notes:</b> never exceed ~50 ppm. Borates are mildly toxic to pets in quantity — a dog that habitually drinks from the pool is the one real reason to skip them. They don't change your chlorine or CSI targets.</p>
       </div>
     </details>
 
@@ -1773,7 +1790,7 @@
   var clamp=function(v,a,b){return Math.max(a,Math.min(b,v));};
   var ic=function(id){return '<svg class="ic"><use href="#i-'+id+'"/></svg>';};
   var money=function(n){return '$'+(Math.round(n/5)*5);};
-  var ICON={fc:"droplet",ph:"flask",ta:"scale",cya:"shield",ch:"gem"};
+  var ICON={fc:"droplet",ph:"flask",ta:"scale",cya:"shield",ch:"gem",salt:"zap"};
 
   /* ===== DOSE-ENGINE-START =====================================================
    * The certified dosing math. PURE — no DOM, no globals, no side effects.
@@ -1837,7 +1854,22 @@
      * A reading within one of these of a band edge is the SAME NUMBER as the
      * edge as far as your test can tell — so the app treats it as in range
      * instead of demanding a dose smaller than the test could even verify. */
-    var TOL={fc:0.5,ph:0.1,ta:10,cya:10,ch:25};
+    var TOL={fc:0.5,ph:0.1,ta:10,cya:10,ch:25,salt:200};
+    /* Salt band for chlorine-generator pools. Generic across common cells
+     * (most ask for 2700–3400 with a sweet spot near 3200); the cell's own
+     * label wins when it differs. Dose: 1 ppm in 10k gal (83,400 lb of water)
+     * takes 0.0834 lb of pool salt. */
+    var SALT={min:2700,ideal:3200,max:3600};
+    function saltLb(cur,ideal,vol){return (ideal-cur)*0.0834*(vol/10000);}   /* +salt, lb of pool salt */
+    /* Borates (optional 30–50 ppm upgrade): pH buffering against upward
+     * drift, mild algae suppression, softer-feeling water. Rates per +1 ppm
+     * per 10k gal, from the TFP-derived 50 ppm recipe (22.6 lb borax +
+     * 1.9 gal 31.45% acid per 10k gal): borax 7.2 oz plus 4.9 fl oz acid to
+     * offset its pH rise, or boric acid 4.7 oz with no acid needed. */
+    var BORATE={min:30,ideal:40,max:50};
+    function borateBoraxOz(cur,target,vol){return (target-cur)*7.2*(vol/10000);}     /* dry oz 20-Mule-Team borax */
+    function borateAcidFlOz(cur,target,vol){return (target-cur)*4.9*(vol/10000);}    /* fl oz 31.45% acid to pair with the borax */
+    function borateBoricOz(cur,target,vol){return (target-cur)*4.7*(vol/10000);}     /* dry oz boric acid, pH-neutral */
     /* --- Dose amounts. Each returns product ounces for the ACTUAL volume. ---
      * Inputs are pre-validated by callers; these are the single source of truth
      * for every "how much do I add" number the app shows. k = vol / 10,000 gal. */
@@ -1958,7 +1990,8 @@
       calciumOz:calciumOz,cyaOz:cyaOz,chlorineOz:chlorineOz,taDrop:taDrop,
       PUCK_OZ:PUCK_OZ,puckFc:puckFc,puckCya:puckCya,pucksPerWeek:pucksPerWeek,
       csi:csi,drainPct:drainPct,effectOf:effectOf,costPerPpm:costPerPpm,customCostPerPpm:customCostPerPpm,
-      psatInHg:psatInHg,nightHeat:nightHeat,tempForecast:tempForecast};
+      psatInHg:psatInHg,nightHeat:nightHeat,tempForecast:tempForecast,
+      SALT:SALT,saltLb:saltLb,BORATE:BORATE,borateBoraxOz:borateBoraxOz,borateAcidFlOz:borateAcidFlOz,borateBoricOz:borateBoricOz};
   })();
   /* ===== DOSE-ENGINE-END ===================================================== */
   /* Aliases so the rest of the app reads the same as before. `targets` folds
@@ -1988,7 +2021,7 @@
       if(!ok&&window.console)console.warn("[Pool Console] Dosing self-check FAILED — do not trust the amounts. See tests/dosing.test.mjs.");
     }catch(e){if(window.console)console.warn("[Pool Console] Dosing self-check errored:",e);}
   })();
-  var saltOn=function(){return $("salt").checked;};
+  var saltOn=function(){return $("saltCell").checked;};
   var SEASON={
     open:{ic:"leaf",txt:"<b>Opening (May).</b> Water's cold, so chlorine barely moves. Set stabilizer first, then balance, then chlorine. Run the filter 24h after uncovering."},
     peak:{ic:"sun",txt:"<b>Summer peak.</b> Sun + swimmers = highest demand. Test free chlorine every 1–2 days and top up to target."},
@@ -2110,7 +2143,7 @@
     }else{
       var s=STRATTIP[strategy]||STRATTIP.steady,extra="";
       if(strategy==="easy"&&!pucksOn()&&!saltOn())extra=" <b>Turn on the puck feeder above</b> (or a salt cell) and this app plans the weekly load and sets the refill reminder.";
-      if(strategy==="crystal")extra+=" Optional pro touch: <b>30–50 ppm borates</b> add sparkle and slow pH drift — a once-a-season addition.";
+      if(strategy==="crystal")extra+=" Optional pro touch: <b>30–50 ppm borates</b> add sparkle and slow pH drift — a once-a-season addition (calculator under Pro tools, below your results).";
       tip.innerHTML=s.txt+extra;$("strategyTip").querySelector("use").setAttribute("href","#i-"+s.ic);
     }
   }
@@ -2121,6 +2154,7 @@
     var fcText=salt?pct+"% of CYA (~"+r1(70*pct/100)+" at 70)":pct+"% of CYA (~"+r1(40*pct/100)+" at 40)";
     var cadence={steady:"every 2–3 days (summer)",crystal:"FC daily, full test weekly",thrifty:"every 2–3 days (summer)",easy:"2× a week"}[strategy];
     var rows=[{ic:"droplet",n:"Free chlorine",v:fcText},{ic:"flask",n:"pH",v:"7.4 – 7.8"},{ic:"scale",n:"Alkalinity",v:T.ta.min+" – "+T.ta.max+" ppm"},{ic:"shield",n:"Stabilizer (CYA)",v:T.cya.min+" – "+T.cya.max+" ppm"},{ic:"gem",n:"Calcium",v:T.ch.min+" – "+T.ch.max+(T.ch.optional?" (optional)":" ppm")},{ic:"vial",n:"Test rhythm",v:cadence}];
+    if(salt)rows.splice(5,0,{ic:"zap",n:"Salt",v:DOSE.SALT.min+" – "+DOSE.SALT.max+" ppm (cell label wins)"});
     $("targetsGrid").innerHTML=rows.map(function(r){return '<div class="tgt">'+ic(r.ic)+'<div><div class="tg-name">'+r.n+'</div><div class="tg-val">'+r.v+'</div></div></div>';}).join("");
   }
 
@@ -2193,6 +2227,16 @@
       else if(fc>b.max+TOL.fc){plan.push({key:"fc",seq:"05",icon:"droplet",name:"Free chlorine",status:"warn",reading:"Now <b>"+fc+"</b> · target <b>"+b.ideal+"</b>",action:{ic:"sun",what:"Just wait",h:"Let it drift down",t:"Let it drift down",prod:"no chemical needed",cost:""},wait:"swim < 5 ppm",why:"Above target — pull the cover, let sun bring it down. No reducer needed."+(pucksOn()?" If it stays high for days, your feeder dial is set too generous — back it off a notch.":"")});}
       else plan.push({key:"fc",seq:"05",icon:"droplet",name:"Free chlorine",status:"good",reading:"<b>"+fc+"</b> · target <b>"+b.ideal+"</b>",good:true,compact:pucksOn()?"Dialed in — the feeder is keeping up.":"Dialed in against your stabilizer."});
     }
+    var sV=num("salt");
+    if(salt&&sV!==null){
+      var SB=DOSE.SALT;
+      if(sV<SB.min){var lbS=DOSE.saltLb(sV,SB.ideal,vol),bags=Math.ceil(lbS/40);
+        plan.push({key:"salt",seq:"06",icon:"zap",name:"Salt",status:sV<SB.min*0.8?"alert":"warn",reading:"Now <b>"+sV+"</b> · target <b>"+SB.ideal+"</b> ppm",action:{ic:"plus",what:"Add pool salt",h:Math.round(lbS)+" lb <span style='opacity:.7'>("+bags+" × 40-lb bag"+(bags>1?"s":"")+")</span>",t:Math.round(lbS)+" lb ("+bags+" bag"+(bags>1?"s":"")+")",prod:"pool-grade NaCl · broadcast in the shallow end, never the skimmer",cost:"≈ $"+Math.round(bags*8)+" est."},wait:"24 h",why:"Low salt starves the cell — most shut down around ~2500 ppm and generate weakly on the way there. Broadcast the bags across the shallow end, brush until dissolved, and run the pump 24 hours before re-testing. <b>Salt never wears out</b> — it only leaves by splash-out and dilution — so add ¾, re-test, then the rest."});}
+      else if(sV>SB.max+TOL.salt){var sPct=Math.round(DOSE.drainPct(sV,SB.ideal)*100),sGal=Math.round(vol*sPct/100/50)*50;
+        plan.push({key:"salt",seq:"06",icon:"zap",name:"Salt",status:sV>SB.max*1.25?"alert":"warn",reading:"Now <b>"+sV+"</b> · target <b>"+SB.ideal+"</b> ppm",action:{ic:"plus",what:"Dilute to lower",h:"Swap ~"+sPct+"% of the water (≈"+sGal.toLocaleString()+" gal)",t:"Swap ~"+sPct+"% (~"+sGal.toLocaleString()+" gal)",prod:"no chemical removes salt",cost:""},wait:"—",why:"High salt can fault the cell and taste briny. <b>Verify with an independent test before draining anything</b> — a cell sensor drifting high is more common than genuinely high salt, and rain plus top-ups walk it down on their own."});}
+      else if(sV>SB.max)plan.push(closeStep("salt","06","zap","Salt",sV," ppm",SB.min,SB.max,TOL.salt));
+      else plan.push({key:"salt",seq:"06",icon:"zap",name:"Salt",status:"good",reading:"<b>"+sV+"</b> ppm",good:true,compact:"Right in the cell's happy zone — re-check monthly and after big rains."});
+    }
     lastPlan=plan;render(plan);snd("success");$("results").scrollIntoView({behavior:"smooth",block:"start"});
   }
   function pill(s){var m={alert:["alert","alert","needs work"],warn:["warn","alert","adjust"],info:["info","droplet","top-up"],good:["good","check","in range"]};var x=m[s];return '<span class="pill '+x[0]+'">'+ic(x[1])+x[2]+'</span>';}
@@ -2264,8 +2308,8 @@
     return run();
   }
   function doLogSnap(){
-    var o={fc:num("fc"),tc:num("tc"),ph:num("ph"),ta:num("ta"),cya:num("cya"),ch:num("ch")};
-    if(o.fc==null&&o.tc==null&&o.ph==null&&o.ta==null&&o.cya==null&&o.ch==null){toast("Enter readings on this tab first");return;}
+    var o={fc:num("fc"),tc:num("tc"),ph:num("ph"),ta:num("ta"),cya:num("cya"),ch:num("ch"),salt:saltOn()?num("salt"):null};
+    if(o.fc==null&&o.tc==null&&o.ph==null&&o.ta==null&&o.cya==null&&o.ch==null&&o.salt==null){toast("Enter readings on this tab first");return;}
     if(addEntry(o))toast("Logged to history");else toast("Couldn't save in this view");
   }
   function runSlam(){
@@ -2304,6 +2348,7 @@
     add("scale","Alkalinity",ta," ppm",sTa.s,T.ta.min+"–"+T.ta.max+" ppm"+(sTa.close?CLOSE:""));
     add("shield","Stabilizer",cya," ppm",sCya.s,T.cya.min+"–"+T.cya.max+" ppm"+(sCya.close?CLOSE:""));
     add("gem","Calcium",ch," ppm",sCh.s,T.ch.min+"–"+T.ch.max+" ppm"+(sCh.close?CLOSE:""));
+    if(salt){var sv2=num("salt"),sMon=(sv2!==null&&sv2<DOSE.SALT.min)?{s:stt(sv2,DOSE.SALT.min,DOSE.SALT.max)}:sttT(sv2,DOSE.SALT.min,DOSE.SALT.max,TOL.salt);add("zap","Salt",sv2," ppm",sMon.s,DOSE.SALT.min+"–"+DOSE.SALT.max+" ppm"+(sMon.close?CLOSE:""));}
     if(!rows.length){$("results").innerHTML='<div class="empty-note">'+ic("alert")+'<span class="big">Nothing to check yet</span>Type in at least one reading, then tap again.</div>';$("results").scrollIntoView({behavior:"smooth",block:"start"});return;}
     var okN=rows.filter(function(r){return r.status==="good";}).length,anyBad=okN<rows.length;
     var h='<div class="order-note" style="color:var(--ink-soft);background:#F6FAFA;border-color:var(--line);">'+ic("info")+'<div><b>'+okN+' of '+rows.length+' in range.</b> A read-only snapshot — nothing added. Log it to build your trend, then pick a workflow if something needs fixing.</div></div>';
@@ -2654,7 +2699,8 @@
     {k:"ph",name:"pH",unit:"",ic:"flask"},
     {k:"ta",name:"Alkalinity",unit:"ppm",ic:"scale"},
     {k:"cya",name:"Stabilizer",unit:"ppm",ic:"shield"},
-    {k:"ch",name:"Calcium",unit:"ppm",ic:"gem"}
+    {k:"ch",name:"Calcium",unit:"ppm",ic:"gem"},
+    {k:"salt",name:"Salt",unit:"ppm",ic:"zap"}
   ];
   var chartParam="fc";
   function pnum(v){if(v==null||v==="")return null;var x=parseFloat(v);return isNaN(x)?null:x;}
@@ -2669,7 +2715,7 @@
   function dateToTs(id){var el=$(id),v=el&&el.value;if(!v)return null;var d=new Date(v+"T12:00:00");return isNaN(d.getTime())?null:d.toISOString();}
   function addEntry(o,ts){
     var a=lsGet("poolHistory")||[];
-    a.push({ts:ts||new Date().toISOString(),fc:o.fc,tc:o.tc,ph:o.ph,ta:o.ta,cya:o.cya,ch:o.ch});
+    a.push({ts:ts||new Date().toISOString(),fc:o.fc,tc:o.tc,ph:o.ph,ta:o.ta,cya:o.cya,ch:o.ch,salt:o.salt});
     if(a.length>500)a=a.slice(a.length-500);
     var ok=histSave(a);renderTrends();if(typeof paintAllRows==="function")paintAllRows();return ok;
   }
@@ -2680,6 +2726,7 @@
     if(k==="ta")return[70,90];
     if(k==="cya"){var T=targets(salt);return[T.cya.min,T.cya.max];}
     if(k==="ch"){var Tc=targets(salt);return[Tc.ch.min,Tc.ch.max];}
+    if(k==="salt")return[DOSE.SALT.min,DOSE.SALT.max];
     if(k==="cc")return[0,0.5];
     return[0,0];
   }
@@ -2845,8 +2892,8 @@
     if(!dl("pool-history-"+dstamp()+".json",str,"application/json"))copyFallback(str);else toast("Exported JSON");
   });
   $("expCsv").addEventListener("click",function(){
-    var a=histAll().slice().reverse(),rows=["date,fc,tc,ph,ta,cya,ch"];
-    a.forEach(function(e){rows.push([e.ts,nv(e.fc),nv(e.tc),nv(e.ph),nv(e.ta),nv(e.cya),nv(e.ch)].join(","));});
+    var a=histAll().slice().reverse(),rows=["date,fc,tc,ph,ta,cya,ch,salt"];
+    a.forEach(function(e){rows.push([e.ts,nv(e.fc),nv(e.tc),nv(e.ph),nv(e.ta),nv(e.cya),nv(e.ch),nv(e.salt)].join(","));});
     var str=rows.join("\n");if(!dl("pool-history-"+dstamp()+".csv",str,"text/csv"))copyFallback(str);else toast("Exported CSV");
   });
   $("impBtn").addEventListener("click",function(){$("impFile").click();});
@@ -2860,12 +2907,12 @@
       var t=text.trim();
       if(t.charAt(0)==="{"||t.charAt(0)==="["){
         var j=JSON.parse(t),arr=Array.isArray(j)?j:(j.entries||[]);
-        entries=arr.map(function(e){return {ts:e.ts||e.d||e.date,fc:pnum(e.fc),tc:pnum(e.tc),ph:pnum(e.ph),ta:pnum(e.ta),cya:pnum(e.cya),ch:pnum(e.ch)};});
+        entries=arr.map(function(e){return {ts:e.ts||e.d||e.date,fc:pnum(e.fc),tc:pnum(e.tc),ph:pnum(e.ph),ta:pnum(e.ta),cya:pnum(e.cya),ch:pnum(e.ch),salt:pnum(e.salt)};});
         if(j&&j.events&&j.events.length)impEvents=j.events.filter(function(ev){return ev&&ev.ts&&ev.type;}).map(function(ev){return {ts:ev.ts,type:ev.type,note:ev.note||""};});
       }else{
         var lines=t.split(/\r?\n/).filter(function(l){return l.trim();}),hdr=lines.shift().toLowerCase().split(","),idx=function(nm){return hdr.indexOf(nm);};
         var di=idx("date")>=0?idx("date"):idx("ts");
-        lines.forEach(function(l){var c=l.split(",");entries.push({ts:c[di],fc:pnum(c[idx("fc")]),tc:pnum(c[idx("tc")]),ph:pnum(c[idx("ph")]),ta:pnum(c[idx("ta")]),cya:pnum(c[idx("cya")]),ch:pnum(c[idx("ch")])});});
+        lines.forEach(function(l){var c=l.split(",");entries.push({ts:c[di],fc:pnum(c[idx("fc")]),tc:pnum(c[idx("tc")]),ph:pnum(c[idx("ph")]),ta:pnum(c[idx("ta")]),cya:pnum(c[idx("cya")]),ch:pnum(c[idx("ch")]),salt:pnum(c[idx("salt")])});});
       }
     }catch(err){toast("Import failed — bad file");return;}
     entries=entries.filter(function(e){return e.ts&&!isNaN(new Date(e.ts).getTime());});
@@ -3034,6 +3081,27 @@
   if($("pcPrice"))$("pcPrice").addEventListener("input",updatePriceCheck);
   if($("pcSize"))$("pcSize").addEventListener("input",updatePriceCheck);
   ["pcProd","pcUnit"].forEach(function(id){if($(id))$(id).addEventListener("change",updatePriceCheck);});
+  var borProd="borax";
+  function updateBorates(){
+    var el=$("borOut");if(!el)return;
+    var vol=num("vol")||10000,cur=num("borCur"),tgt=num("borTarget");
+    if(cur==null)cur=0;if(tgt==null)tgt=40;tgt=Math.min(50,tgt);
+    if(tgt<=cur){el.innerHTML='<p class="skip-note" style="margin:2px 0 0;">'+(cur>50?"Above 50 ppm — stop adding; dilution is the only way down.":"Already at or above target — nothing to add.")+'</p>';return;}
+    var h;
+    if(borProd==="borax"){
+      var bOz=DOSE.borateBoraxOz(cur,tgt,vol),aOz=DOSE.borateAcidFlOz(cur,tgt,vol);
+      var boxes=bOz/76,fB=fmtDry(bOz,false),fA=fmtFluid(aOz);
+      h='<div class="dose"><div class="d-ic">'+ic("plus")+'</div><div class="d-main"><div class="what">Add borax + muriatic acid (together, same day)</div><div class="amt">'+fB.h+' <span style="font-size:.85rem;">of 20 Mule Team borax (≈ '+(Math.round(boxes*10)/10)+' of the 76-oz boxes)</span></div><div class="prod">plus <b>'+fA.h+'</b> of 31.45% muriatic acid to offset the pH rise</div><div class="cost">≈ $'+Math.round(boxes*6+aOz/128*9)+' est. — the budget route</div></div></div>'
+        +'<p class="skip-note" style="margin:8px 0 0;"><b>How:</b> broadcast the borax a box at a time with the pump running, then pour the acid low and slow (never together in a bucket). Split over 2–3 rounds, re-testing pH between rounds — it will spike toward 8 until the acid catches up. Re-test borates the next day.</p>';
+    }else{
+      var cOz=DOSE.borateBoricOz(cur,tgt,vol),fC=fmtDry(cOz,false);
+      h='<div class="dose"><div class="d-ic">'+ic("plus")+'</div><div class="d-main"><div class="what">Add boric acid</div><div class="amt">'+fC.h+'</div><div class="prod">pH-neutral — no acid needed, no pH spike</div><div class="cost">≈ $'+Math.round(cOz/16*5)+' est. — costs more, zero fuss</div></div></div>'
+        +'<p class="skip-note" style="margin:8px 0 0;"><b>How:</b> pre-dissolve in warm water and pour around the pool with the pump running, in one go. Re-test borates the next day. This is the route most pros use on service accounts.</p>';
+    }
+    el.innerHTML=h;
+  }
+  ["borCur","borTarget"].forEach(function(id){if($(id))$(id).addEventListener("input",updateBorates);});
+  if($("borProd"))$("borProd").addEventListener("click",function(e){var b=e.target.closest("[data-bp]");if(!b)return;borProd=b.getAttribute("data-bp");document.querySelectorAll("#borProd button").forEach(function(x){x.setAttribute("aria-pressed",x===b?"true":"false");});updateBorates();snd("tap");});
   if($("strategySeg"))$("strategySeg").addEventListener("click",function(e){
     var b=e.target.closest("[data-strategy]");if(!b)return;
     strategy=b.getAttribute("data-strategy");if(!DOSE.STRATEGIES[strategy])strategy="steady";
@@ -3059,7 +3127,7 @@
     if(s.vol>0)$("vol").value=s.vol;
     if(s.product&&CL[s.product])$("product").value=s.product;
     if(s.shock&&CL[s.shock]&&$("shockProduct"))$("shockProduct").value=s.shock;
-    $("salt").checked=!!s.salt;
+    $("saltCell").checked=!!s.salt;
     if(s.surface&&DOSE.SURFACES[s.surface]){surface=s.surface;if($("surface"))$("surface").value=s.surface;}
     if(s.strategy&&DOSE.STRATEGIES[s.strategy])strategy=s.strategy;
     if($("pucks"))$("pucks").checked=!!s.pucks;
@@ -3067,14 +3135,14 @@
     if(s.season==="open"||s.season==="peak"||s.season==="close"){season=s.season;document.querySelectorAll('.seg [data-season]').forEach(function(x){x.setAttribute("aria-pressed",x.getAttribute("data-season")===season?"true":"false");});}
     if(s.cover&&COVER[s.cover]){cover=s.cover;document.querySelectorAll("#coverSeg button").forEach(function(x){x.setAttribute("aria-pressed",x.getAttribute("data-cover")===cover?"true":"false");});}
   }
-  function inputsChanged(){updateSetupChips();updateCheat();updateSupplies();updatePump();updateMustard();updatePuckUI();updateStrategyUI();updateCsi();updateFx();updatePriceCheck();updateHeat();paintAllRows();saveSetup();}
+  function inputsChanged(){updateSetupChips();updateCheat();updateSupplies();updatePump();updateMustard();updatePuckUI();updateStrategyUI();updateCsi();updateFx();updatePriceCheck();updateHeat();updateBorates();paintAllRows();saveSetup();}
   ["vol","product"].forEach(function(id){$(id).addEventListener("input",inputsChanged);});
   $("product").addEventListener("change",inputsChanged);
   if($("shockProduct"))$("shockProduct").addEventListener("change",inputsChanged);
   if($("surface"))$("surface").addEventListener("change",function(){surface=this.value;if(!DOSE.SURFACES[surface])surface="vinyl";refreshBars();syncHints();inputsChanged();});
   if($("pucks"))$("pucks").addEventListener("change",function(){inputsChanged();renderMinders();snd("toggle");});
   if($("puckDays"))$("puckDays").addEventListener("input",function(){inputsChanged();renderMinders();});
-  $("salt").addEventListener("change",function(){paintScale(num("cya")===null?40:num("cya"));$("sigCya").value=num("cya")===null?$("sigCya").value:num("cya");inputsChanged();});
+  $("saltCell").addEventListener("change",function(){paintScale(num("cya")===null?40:num("cya"));$("sigCya").value=num("cya")===null?$("sigCya").value:num("cya");updateSaltRow();inputsChanged();});
   $("gpm").addEventListener("input",updatePump);
   $("coverSeg").addEventListener("click",function(e){var b=e.target.closest("[data-cover]");if(!b)return;cover=b.getAttribute("data-cover");document.querySelectorAll("#coverSeg button").forEach(function(x){x.setAttribute("aria-pressed",x===b?"true":"false");});updateSupplies();saveSetup();});
   document.querySelectorAll('.seg [data-season]').forEach(function(b){b.addEventListener("click",function(){season=b.getAttribute("data-season");document.querySelectorAll('.seg [data-season]').forEach(function(x){x.setAttribute("aria-pressed",x===b?"true":"false");});updateSeasonTip();updateSetupChips();updatePuckUI();saveSetup();});});
@@ -3229,16 +3297,18 @@
     {k:"ph",name:"pH",ic:"flask",min:6.2,max:9,step:0.1,unit:"",syn:"pH \u00b7 acid\u2013base balance",kind:"range"},
     {k:"ta",name:"Total alkalinity",ic:"scale",min:0,max:240,step:10,unit:"ppm",syn:"TA \u00b7 Alkalinity \u00b7 Alk \u00b7 Buffer",kind:"range"},
     {k:"cya",name:"Stabilizer",ic:"shield",min:0,max:150,step:5,unit:"ppm",syn:"CYA \u00b7 Cyanuric acid \u00b7 Conditioner",kind:"range"},
-    {k:"ch",name:"Calcium hardness",ic:"gem",min:0,max:800,step:25,unit:"ppm",syn:"CH \u00b7 Hardness \u00b7 Total hardness",kind:"range"}
+    {k:"ch",name:"Calcium hardness",ic:"gem",min:0,max:800,step:25,unit:"ppm",syn:"CH \u00b7 Hardness \u00b7 Total hardness",kind:"range"},
+    {k:"salt",name:"Salt",ic:"zap",min:0,max:6000,step:100,unit:"ppm",syn:"NaCl \u00b7 for the chlorine cell",kind:"range"}
   ];
-  var SDEF={fc:3,tc:3,ph:7.6,ta:80,cya:40,ch:250};
+  var SDEF={fc:3,tc:3,ph:7.6,ta:80,cya:40,ch:250,salt:3200};
   var INFO={
     fc:{b:"The active sanitizer doing the work right now \u2014 it's what kills algae and bacteria. Too low and the water isn't protected; too high is harsh on skin, eyes, and the liner. Its ideal range rises with your stabilizer, which is why the target here moves.",s:"Free Chlorine \u00b7 FC \u00b7 Free Available Chlorine \u00b7 Free Cl"},
     tc:{b:"All the chlorine present \u2014 free chlorine plus the \u201cused-up\u201d kind (chloramines). If Total reads higher than Free, that gap is combined chlorine: spent sanitizer behind the strong \u201cpool smell\u201d and stinging eyes. A gap over ~0.5 ppm means it's time to shock. Optional \u2014 only useful next to free chlorine.",s:"Total Chlorine \u00b7 TC \u00b7 Total Cl"},
     ph:{b:"How acidic or basic the water is. Low pH stings eyes and corrodes metal; high pH clouds the water, leaves scale, and makes chlorine sluggish. Aim near 7.6 \u2014 close to your own eyes' pH.",s:"pH (labeled the same on every kit)"},
     ta:{b:"The water's buffer \u2014 it keeps pH from swinging around. Too low and pH bounces with every rain or dose; too high and pH drifts up and gets stubborn. Set alkalinity before fine-tuning pH.",s:"Total Alkalinity \u00b7 Alkalinity \u00b7 TA \u00b7 Alk \u00b7 Buffer \u00b7 TAC"},
     cya:{b:"Sunscreen for your chlorine \u2014 it slows the sun from burning it off. Without it, summer sun wrecks chlorine in hours; with too much, chlorine gets locked up and weak. It sets how much free chlorine you actually need.",s:"Cyanuric Acid \u00b7 Stabilizer \u00b7 Conditioner \u00b7 CYA"},
-    ch:{b:"Dissolved calcium in the water. Too soft and the water pulls minerals from whatever it touches \u2014 it etches plaster and dulls fiberglass gelcoat; too hard causes scale and cloudiness. On a vinyl liner there's nothing to etch, so it's low-priority there. Your target follows the pool surface set in Pool setup.",s:"Calcium Hardness \u00b7 Total Hardness \u00b7 Hardness \u00b7 CH"}
+    ch:{b:"Dissolved calcium in the water. Too soft and the water pulls minerals from whatever it touches \u2014 it etches plaster and dulls fiberglass gelcoat; too hard causes scale and cloudiness. On a vinyl liner there's nothing to etch, so it's low-priority there. Your target follows the pool surface set in Pool setup.",s:"Calcium Hardness \u00b7 Total Hardness \u00b7 Hardness \u00b7 CH"},
+    salt:{b:"The fuel for your chlorine generator \u2014 the cell splits dissolved salt into chlorine, and the salt re-forms afterward, so it only leaves by splash-out and dilution. Too low and the cell shuts down or generates weakly; too high and many cells fault out (and very high tastes salty). Trust an independent test over the cell's own readout once a month \u2014 drifting cell sensors are common. Your cell's label wins if it asks for a different range.",s:"Salt \u00b7 NaCl \u00b7 Salinity \u2014 shown because your salt cell is on in Pool setup"}
   };
   function buildRows(){
     var html=PARAMS.map(function(p){return '<div class="prm unset" id="pw_'+p.k+'">'+
@@ -3279,6 +3349,7 @@
     if(k==="ta")return {lo:T.ta.min,hi:T.ta.max};
     if(k==="cya")return {lo:T.cya.min,hi:T.cya.max};
     if(k==="ch")return {lo:T.ch.min,hi:T.ch.max};
+    if(k==="salt")return {lo:DOSE.SALT.min,hi:DOSE.SALT.max};
     return null;
   }
   function statusOf(k){
@@ -3297,8 +3368,8 @@
       if(v>b.max){if(v<=b.max+TOL.fc)return {cls:"good",word:"Close enough"};return {cls:(v>b.max*1.5?"alert":"warn"),word:(v>b.max*1.5?"Very high":"High")};}
       return {cls:"good",word:"In range"};
     }
-    var t=targetsFor(k),tl=TOL[k]||0;
-    if(v<t.lo){if(v>=t.lo-tl)return {cls:"good",word:"Close enough"};return {cls:(v<t.lo*0.8?"alert":"warn"),word:(v<t.lo*0.8?"Very low":"Low")};}
+    var t=targetsFor(k),tl=TOL[k]||0,tlLow=(k==="salt")?0:tl; /* low salt can stop the cell — never soften it */
+    if(v<t.lo){if(tlLow&&v>=t.lo-tlLow)return {cls:"good",word:"Close enough"};return {cls:(v<t.lo*0.8?"alert":"warn"),word:(v<t.lo*0.8?"Very low":"Low")};}
     if(v>t.hi){if(v<=t.hi+tl)return {cls:"good",word:"Close enough"};return {cls:(v>t.hi*1.25?"alert":"warn"),word:(v>t.hi*1.25?"Very high":"High")};}
     return {cls:"good",word:"In range"};
   }
@@ -3330,7 +3401,8 @@
       lab.style.display="";lab.textContent="last "+trim(last.v)+(p.unit?" "+p.unit:"")+" \u00b7 "+relTime(last.ts);}
     else{g.style.display="none";lab.style.display="none";lab.textContent="";}
   }
-  function paintAllRows(){if(!$("sr_fc"))return;PARAMS.forEach(paintRow);}
+  function updateSaltRow(){var el=$("pw_salt");if(el)el.style.display=saltOn()?"":"none";}
+  function paintAllRows(){if(!$("sr_fc"))return;PARAMS.forEach(paintRow);updateSaltRow();}
   function paintAllSliders(){paintAllRows();}
   function commitParam(k,src){
     var sr=$("sr_"+k);if(!sr)return;
@@ -3366,7 +3438,7 @@
   loadSetup();
   paintScale(40);refreshBars();syncHints();updateSetupChips();updateSeasonTip();updateCheat();
   if($("htArea")&&num("fillDia"))$("htArea").value=Math.round(Math.PI*Math.pow((num("fillDia")||21)/2,2));
-  updateSupplies();renderGear();updatePump();updatePuckUI();updateStrategyUI();updateCsi();updateFx();updatePriceCheck();updateHeat();renderMinders();buildDecon();updateMustard();renderAlmanac();migrateLog();renderTrends();setMode("balance");
+  updateSupplies();renderGear();updatePump();updatePuckUI();updateStrategyUI();updateCsi();updateFx();updatePriceCheck();updateHeat();updateBorates();renderMinders();buildDecon();updateMustard();renderAlmanac();migrateLog();renderTrends();setMode("balance");
   /* ---- appearance: dark/light/auto + dynamic text size ---- */
   var PREF={theme:"auto",scale:100};
   try{var pt=localStorage.getItem("poolTheme");if(pt==="light"||pt==="dark"||pt==="auto")PREF.theme=pt;}catch(e){}

@@ -49,6 +49,14 @@ Pro tools, all free and client-side:
   line. Uses the live Open-Meteo forecast (daily solar energy, highs/lows,
   wind, humidity) when fetched, or seasonal averages plus a sunny/mixed/gray
   picker offline.
+- **Salt dosing (SWG pools)** — with the salt cell on, Salt becomes a full
+  reading: 2700–3600 ppm band (your cell's label wins), pounds-and-bags dose
+  when low (the low side is never tolerance-softened — cells shut down near
+  2500), exact water-swap when high, and salt in monitor, trends, logging,
+  and CSV export.
+- **Borates calculator** — the optional 30–50 ppm upgrade, both routes:
+  borax + muriatic acid (cheap) or boric acid (pH-neutral, zero fuss), with
+  TFP-derived rates, staged-addition instructions, and the pet-safety note.
 
 ---
 
