@@ -1077,16 +1077,30 @@
             </select>
           </div>
         </div>
-        <div class="toggle-row"><div class="tl"><svg class="ic"><use href="#i-shield"/></svg><div>Trichlor pucks in a feeder <div class="desc">Floater, inline feeder, or any autochlorinator that holds 3&Prime; tablets</div></div></div><label class="switch"><input type="checkbox" id="pucks" /><span class="track"></span></label></div>
+        <p class="skip-note" style="margin:16px 2px 4px;padding-top:14px;border-top:1px dashed var(--line);"><b>How do you chlorinate day-to-day?</b> The thing that keeps chlorine in the water between tests — doses, reminders, and the Buy tab all follow it.</p>
+        <div class="seg" role="group" aria-label="Day-to-day chlorination method" id="methodSeg">
+          <button type="button" data-method="manual" aria-pressed="true"><svg class="ic"><use href="#i-droplet"/></svg>By hand</button>
+          <button type="button" data-method="pucks" aria-pressed="false"><svg class="ic"><use href="#i-shield"/></svg>Pucks in a feeder</button>
+          <button type="button" data-method="salt" aria-pressed="false"><svg class="ic"><use href="#i-zap"/></svg>Salt cell</button>
+        </div>
+        <p class="skip-note" id="methodNote" style="margin:8px 2px 0;"></p>
         <div class="puck-sub" id="puckSub" hidden>
           <div class="pk-row">
-            <label for="puckDays">Check &amp; refill the feeder every</label>
+            <label for="puckSize">The feeder holds</label>
+            <select id="puckSize" style="padding:7px 9px;border:1px solid var(--line-strong);border-radius:8px;background:var(--input-bg);color:var(--ink);font-family:var(--body);font-size:.86rem;">
+              <option value="8" selected>3&Prime; trichlor pucks (8 oz)</option>
+              <option value="0.5">1&Prime; trichlor tablets (½ oz)</option>
+              <option value="8s">Trichlor sticks (8 oz)</option>
+            </select>
+          </div>
+          <div class="pk-row" style="margin-top:8px;">
+            <label for="puckDays">Check &amp; refill it every</label>
             <input type="number" id="puckDays" inputmode="numeric" min="2" max="21" step="1" value="7" />
             <label for="puckDays">days</label>
           </div>
           <div class="pk-note" id="puckNote"></div>
+          <div class="pk-note" style="color:var(--alert);margin-top:7px;"><b>Trichlor only.</b> Never load cal-hypo tablets into a trichlor feeder or floater — residue from the two can react violently, even ignite. If you're unsure what was in it before, run it full of water for a day first.</div>
         </div>
-        <div class="toggle-row"><div class="tl"><svg class="ic"><use href="#i-zap"/></svg><div>Saltwater chlorine cell<div class="desc">Shifts CYA target to 60–80, runs chlorine a bit lower, and adds a Salt reading row with dosing</div></div></div><label class="switch"><input type="checkbox" id="saltCell" /><span class="track"></span></label></div>
         <div class="seg mt" role="group" aria-label="Season">
           <button type="button" data-season="open" aria-pressed="false"><svg class="ic"><use href="#i-leaf"/></svg>Opening</button>
           <button type="button" data-season="peak" aria-pressed="true"><svg class="ic"><use href="#i-sun"/></svg>Summer</button>
@@ -1888,10 +1902,10 @@
     function chlorineOz(deltaFc,product,vol){var p=CL[product];if(!p)throw new Error("Unknown chlorine product: "+product);return deltaFc*p.per*(vol/10000);} /* +FC, product oz */
     function taDrop(acidFlOz,vol){return (acidFlOz/8/(vol/10000))*3.1;}                  /* TA fall from an acid dose, ppm (31.45% acid: ~3.1 ppm per 8 fl oz / 10k gal) */
     /* --- Trichlor puck (3", 8 oz) math for the feeder/autochlorinator. --- */
-    var PUCK_OZ=8;
-    function puckFc(vol){return PUCK_OZ/CL.trichlor.per/(vol/10000);}                    /* +ppm FC one puck delivers as it fully dissolves */
-    function puckCya(vol){return puckFc(vol)*0.61;}                                      /* +ppm CYA that same puck leaves behind, permanently */
-    function pucksPerWeek(vol,demandPpmDay){var d=(demandPpmDay==null||isNaN(demandPpmDay))?2.5:demandPpmDay;return (d*7)/puckFc(vol);} /* pucks to cover a week's FC demand */
+    var PUCK_OZ=8;                                                                       /* default: a 3" puck; pass puckOz for 1" tabs (0.5) or sticks (8) */
+    function puckFc(vol,puckOz){var oz=(puckOz>0)?puckOz:PUCK_OZ;return oz/CL.trichlor.per/(vol/10000);} /* +ppm FC one unit delivers as it fully dissolves */
+    function puckCya(vol,puckOz){return puckFc(vol,puckOz)*0.61;}                        /* +ppm CYA that same unit leaves behind, permanently */
+    function pucksPerWeek(vol,demandPpmDay,puckOz){var d=(demandPpmDay==null||isNaN(demandPpmDay))?2.5:demandPpmDay;return (d*7)/puckFc(vol,puckOz);} /* units to cover a week's FC demand */
     /* --- CSI: calcite saturation index (Langelier). The chemist's single
      * number for whether water wants to DISSOLVE calcium (etch plaster) or
      * DROP it (scale). pH − pHs with the standard A/B/C/D factors; carbonate
@@ -2021,14 +2035,17 @@
       if(!ok&&window.console)console.warn("[Pool Console] Dosing self-check FAILED — do not trust the amounts. See tests/dosing.test.mjs.");
     }catch(e){if(window.console)console.warn("[Pool Console] Dosing self-check errored:",e);}
   })();
-  var saltOn=function(){return $("saltCell").checked;};
+  /* One explicit day-to-day chlorination method: manual | pucks | salt. */
+  var method="manual";
+  var saltOn=function(){return method==="salt";};
   var SEASON={
     open:{ic:"leaf",txt:"<b>Opening (May).</b> Water's cold, so chlorine barely moves. Set stabilizer first, then balance, then chlorine. Run the filter 24h after uncovering."},
     peak:{ic:"sun",txt:"<b>Summer peak.</b> Sun + swimmers = highest demand. Test free chlorine every 1–2 days and top up to target."},
     close:{ic:"snow",txt:"<b>Closing (Sep).</b> Cooling water means chlorine lasts much longer — stretch out testing and don't over-treat a pool you're about to shut."}
   };
   var season="peak", cover="some";
-  var pucksOn=function(){var el=$("pucks");return !!(el&&el.checked);};
+  var pucksOn=function(){return method==="pucks";};
+  function puckSpec(){var el=$("puckSize"),v=el?el.value:"8";return {oz:parseFloat(v)||8,noun:v==="0.5"?"tablet":v==="8s"?"stick":"puck"};}
   function puckDays(){var d=num("puckDays");return (d&&d>=2&&d<=21)?Math.round(d):7;}
 
   function fmtFluid(oz){
@@ -2087,8 +2104,8 @@
   function prodShort(){return PRODNAMES[$("product").value];}
   function shockShort(){return $("shockProduct")?PRODNAMES[$("shockProduct").value]:"cal-hypo";}
   function updateSetupChips(){
-    var method=saltOn()?"saltwater cell":pucksOn()?("pucks · refill "+puckDays()+"d"):"manual chlorine";
-    var c=[(num("vol")||10000).toLocaleString()+" gal",DOSE.SURFACES[surface].label,method,prodShort(),"shock: "+shockShort(),season==="open"?"opening":season==="close"?"closing":"summer",DOSE.STRATEGIES[strategy].label];
+    var methodChip=saltOn()?"saltwater cell":pucksOn()?(puckSpec().noun+"s in feeder · refill "+puckDays()+"d"):"chlorine by hand";
+    var c=[(num("vol")||10000).toLocaleString()+" gal",DOSE.SURFACES[surface].label,methodChip,prodShort(),"shock: "+shockShort(),season==="open"?"opening":season==="close"?"closing":"summer",DOSE.STRATEGIES[strategy].label];
     $("setupChips").innerHTML=c.map(function(x){return"<span>"+x+"</span>";}).join("");
   }
   /* Puck-feeder guidance: pucks/week for this volume, and the CYA cost. */
@@ -2096,16 +2113,24 @@
     var sub=$("puckSub");if(!sub)return;
     var on=pucksOn();sub.hidden=!on;
     if(!on)return;
-    var vol=num("vol")||10000;
-    var perPuckFc=DOSE.puckFc(vol),perPuckCya=DOSE.puckCya(vol);
-    var wk=DOSE.pucksPerWeek(vol,season==="peak"?2.5:1.5);
+    var vol=num("vol")||10000,spec=puckSpec();
+    var perPuckFc=DOSE.puckFc(vol,spec.oz),perPuckCya=DOSE.puckCya(vol,spec.oz);
+    var wk=DOSE.pucksPerWeek(vol,season==="peak"?2.5:1.5,spec.oz);
     var lo=Math.max(1,Math.round(wk*0.8)),hi=Math.max(lo,Math.round(wk*1.2));
     var cyaMo=r0(wk*perPuckCya*4.35);
-    var html="Plan on <b>"+(lo===hi?lo:lo+"–"+hi)+" pucks a week</b> at this volume ("+(season==="peak"?"summer":"cool-water")+" demand) — load that many, set an inline feeder's dial to about <b>2 of 8</b> (a floater: half-open), then re-test FC in 2 days and nudge the dial, not the puck count. Each puck adds ~<b>"+r1(perPuckFc)+" ppm FC</b> as it dissolves and leaves ~<b>"+r1(perPuckCya)+" ppm CYA</b> behind for good — at this pace CYA climbs roughly <b>"+cyaMo+" ppm a month</b>, so re-test CYA monthly and switch top-ups to liquid or cal-hypo once it passes ~60.";
-    if(saltOn())html+="<br><b>Heads up:</b> with a salt cell you rarely want pucks too — your cell already makes chlorine, and pucks will push CYA past the salt target fast. Use pucks only to cover a vacation or a dead cell.";
-    var mnote=STORE_OK?"A “Check & refill puck feeder” reminder now lives on the Care tab, due every "+puckDays()+" days.":"";
+    var html="Plan on <b>"+(lo===hi?lo:lo+"–"+hi)+" "+spec.noun+(hi>1?"s":"")+" a week</b> at this volume ("+(season==="peak"?"summer":"cool-water")+" demand) — load that many, set an inline feeder's dial to about <b>2 of 8</b> (a floater: half-open), then re-test FC in 2 days and nudge the dial, not the count. Each "+spec.noun+" adds ~<b>"+r1(perPuckFc)+" ppm FC</b> as it dissolves and leaves ~<b>"+r1(perPuckCya)+" ppm CYA</b> behind for good — at this pace CYA climbs roughly <b>"+cyaMo+" ppm a month</b>, so re-test CYA monthly and switch top-ups to liquid or cal-hypo once it passes ~60.";
+    var mnote=STORE_OK?"A “Check & refill the feeder” reminder now lives on the Care tab, due every "+puckDays()+" days.":"";
     if(mnote)html+="<br>"+mnote;
     $("puckNote").innerHTML=html;
+  }
+  var METHODNOTE={
+    manual:"You dose liquid or granular yourself — the top-up product above is your day-to-day chlorine. Cheapest and most precise; just test every couple of days in summer.",
+    pucks:"The feeder carries the baseline; the product above is only for quick bumps and corrections. Tell it what you load:",
+    salt:"The cell makes your chlorine. This shifts the CYA target to <b>60–80</b>, runs the FC target a bit leaner, and adds a <b>Salt</b> reading row with dosing. (Skip pucks alongside a cell — they push CYA past the salt target fast.)"
+  };
+  function updateMethodUI(){
+    document.querySelectorAll('#methodSeg [data-method]').forEach(function(b){b.setAttribute("aria-pressed",b.getAttribute("data-method")===method?"true":"false");});
+    var n=$("methodNote");if(n)n.innerHTML=METHODNOTE[method]||"";
   }
   function updateSeasonTip(){var s=SEASON[season];$("seasonTip").querySelector("use").setAttribute("href","#i-"+s.ic);$("seasonTipTxt").innerHTML=s.txt;}
   /* Cheapest honest way to buy +1 ppm FC. Excludes trichlor (too slow for a
@@ -2142,7 +2167,7 @@
       tip.innerHTML=txt;$("strategyTip").querySelector("use").setAttribute("href","#i-tag");
     }else{
       var s=STRATTIP[strategy]||STRATTIP.steady,extra="";
-      if(strategy==="easy"&&!pucksOn()&&!saltOn())extra=" <b>Turn on the puck feeder above</b> (or a salt cell) and this app plans the weekly load and sets the refill reminder.";
+      if(strategy==="easy"&&!pucksOn()&&!saltOn())extra=" <b>Pick “Pucks in a feeder” (or “Salt cell”) above</b> and this app plans the weekly load and sets the refill reminder.";
       if(strategy==="crystal")extra+=" Optional pro touch: <b>30–50 ppm borates</b> add sparkle and slow pH drift — a once-a-season addition (calculator under Pro tools, below your results).";
       tip.innerHTML=s.txt+extra;$("strategyTip").querySelector("use").setAttribute("href","#i-"+s.ic);
     }
@@ -3120,18 +3145,21 @@
   }
   /* Pool setup persists on this device so it survives a reload. */
   function saveSetup(){
-    lsSet("poolSetup",{vol:num("vol"),product:$("product").value,shock:$("shockProduct")?$("shockProduct").value:"calhypo",salt:saltOn(),surface:surface,strategy:strategy,pucks:pucksOn(),puckDays:puckDays(),season:season,cover:cover});
+    lsSet("poolSetup",{vol:num("vol"),product:$("product").value,shock:$("shockProduct")?$("shockProduct").value:"calhypo",method:method,salt:saltOn(),surface:surface,strategy:strategy,pucks:pucksOn(),puckSize:$("puckSize")?$("puckSize").value:"8",puckDays:puckDays(),season:season,cover:cover});
   }
   function loadSetup(){
     var s=lsGet("poolSetup");if(!s)return;
     if(s.vol>0)$("vol").value=s.vol;
     if(s.product&&CL[s.product])$("product").value=s.product;
     if(s.shock&&CL[s.shock]&&$("shockProduct"))$("shockProduct").value=s.shock;
-    $("saltCell").checked=!!s.salt;
+    /* Method, with back-compat for setups saved before the explicit picker. */
+    if(s.method==="manual"||s.method==="pucks"||s.method==="salt")method=s.method;
+    else method=s.salt?"salt":(s.pucks?"pucks":"manual");
     if(s.surface&&DOSE.SURFACES[s.surface]){surface=s.surface;if($("surface"))$("surface").value=s.surface;}
     if(s.strategy&&DOSE.STRATEGIES[s.strategy])strategy=s.strategy;
-    if($("pucks"))$("pucks").checked=!!s.pucks;
+    if(s.puckSize&&$("puckSize")&&["8","0.5","8s"].indexOf(s.puckSize)>=0)$("puckSize").value=s.puckSize;
     if(s.puckDays>=2&&s.puckDays<=21&&$("puckDays"))$("puckDays").value=Math.round(s.puckDays);
+    updateMethodUI();updateSaltRow();
     if(s.season==="open"||s.season==="peak"||s.season==="close"){season=s.season;document.querySelectorAll('.seg [data-season]').forEach(function(x){x.setAttribute("aria-pressed",x.getAttribute("data-season")===season?"true":"false");});}
     if(s.cover&&COVER[s.cover]){cover=s.cover;document.querySelectorAll("#coverSeg button").forEach(function(x){x.setAttribute("aria-pressed",x.getAttribute("data-cover")===cover?"true":"false");});}
   }
@@ -3140,9 +3168,15 @@
   $("product").addEventListener("change",inputsChanged);
   if($("shockProduct"))$("shockProduct").addEventListener("change",inputsChanged);
   if($("surface"))$("surface").addEventListener("change",function(){surface=this.value;if(!DOSE.SURFACES[surface])surface="vinyl";refreshBars();syncHints();inputsChanged();});
-  if($("pucks"))$("pucks").addEventListener("change",function(){inputsChanged();renderMinders();snd("toggle");});
+  if($("methodSeg"))$("methodSeg").addEventListener("click",function(e){
+    var b=e.target.closest("[data-method]");if(!b)return;
+    var m=b.getAttribute("data-method");if(m!=="manual"&&m!=="pucks"&&m!=="salt")m="manual";
+    method=m;updateMethodUI();
+    paintScale(num("cya")===null?40:num("cya"));$("sigCya").value=num("cya")===null?$("sigCya").value:num("cya");
+    updateSaltRow();refreshBars();syncHints();inputsChanged();renderMinders();snd("toggle");
+  });
+  if($("puckSize"))$("puckSize").addEventListener("change",function(){inputsChanged();renderMinders();});
   if($("puckDays"))$("puckDays").addEventListener("input",function(){inputsChanged();renderMinders();});
-  $("saltCell").addEventListener("change",function(){paintScale(num("cya")===null?40:num("cya"));$("sigCya").value=num("cya")===null?$("sigCya").value:num("cya");updateSaltRow();inputsChanged();});
   $("gpm").addEventListener("input",updatePump);
   $("coverSeg").addEventListener("click",function(e){var b=e.target.closest("[data-cover]");if(!b)return;cover=b.getAttribute("data-cover");document.querySelectorAll("#coverSeg button").forEach(function(x){x.setAttribute("aria-pressed",x===b?"true":"false");});updateSupplies();saveSetup();});
   document.querySelectorAll('.seg [data-season]').forEach(function(b){b.addEventListener("click",function(){season=b.getAttribute("data-season");document.querySelectorAll('.seg [data-season]').forEach(function(x){x.setAttribute("aria-pressed",x===b?"true":"false");});updateSeasonTip();updateSetupChips();updatePuckUI();saveSetup();});});
@@ -3438,7 +3472,7 @@
   loadSetup();
   paintScale(40);refreshBars();syncHints();updateSetupChips();updateSeasonTip();updateCheat();
   if($("htArea")&&num("fillDia"))$("htArea").value=Math.round(Math.PI*Math.pow((num("fillDia")||21)/2,2));
-  updateSupplies();renderGear();updatePump();updatePuckUI();updateStrategyUI();updateCsi();updateFx();updatePriceCheck();updateHeat();updateBorates();renderMinders();buildDecon();updateMustard();renderAlmanac();migrateLog();renderTrends();setMode("balance");
+  updateMethodUI();updateSupplies();renderGear();updatePump();updatePuckUI();updateStrategyUI();updateCsi();updateFx();updatePriceCheck();updateHeat();updateBorates();renderMinders();buildDecon();updateMustard();renderAlmanac();migrateLog();renderTrends();setMode("balance");
   /* ---- appearance: dark/light/auto + dynamic text size ---- */
   var PREF={theme:"auto",scale:100};
   try{var pt=localStorage.getItem("poolTheme");if(pt==="light"||pt==="dark"||pt==="auto")PREF.theme=pt;}catch(e){}
