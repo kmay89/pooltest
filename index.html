@@ -1846,7 +1846,7 @@
   function render(plan){
     var inRange=plan.filter(function(p){return p.good;}).length,total=plan.length,pctIn=total?r0(inRange/total*100):0;
     var onlyTopup=plan.every(function(p){return p.good||p.status==="info";});
-    var rc=pctIn===100?"var(--good)":(onlyTopup||pctIn>=60)?"var(--warn)":"var(--alert)";
+    var rc=pctIn===100?"var(--good)":onlyTopup?"var(--pool)":pctIn>=60?"var(--warn)":"var(--alert)";
     var verdict=pctIn===100?"Everything you tested is balanced.":onlyTopup?"Balanced — just the routine chlorine top-up below.":pctIn>=60?"Close — a couple of tweaks below.":"A few things to bring into line.";
     var chips=plan.map(function(p){return '<button class="gchip '+(p.good?"good":p.status)+'" data-go="step-'+p.key+'">'+ic(ICON[p.key])+p.name.replace("Free chlorine","Chlorine").replace("Alkalinity","Alk")+'</button>';}).join("");
     var h='<div class="glance"><div class="ring" style="--p:'+pctIn+';--c:'+rc+'"><div class="ring-in"><b>'+inRange+'</b><span>/'+total+' ok</span></div></div><div class="g-right"><div class="g-verdict"><b>'+verdict+'</b></div><div class="g-chips">'+chips+'</div></div></div>';
