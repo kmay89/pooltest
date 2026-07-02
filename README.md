@@ -39,6 +39,11 @@ Pro tools, all free and client-side:
   $ per +1 ppm FC in *your* pool, judged against going rates (with the CYA
   "baggage cost" of stabilized products called out).
 - **Volume calculator** — round / oval / rectangle with average depth.
+- **Tonight's heat & evaporation** (Care tab) — a physics-based overnight
+  model (ASHRAE-style evaporation, radiation to the night sky, wind-scaled
+  convection) comparing bubble-cover-on vs off: morning water temp, °F and
+  BTU lost, gallons evaporated, and the heater cost to win it back. Tonight's
+  low auto-fills from the Plan-tab forecast.
 
 ---
 
