@@ -54,6 +54,11 @@ Pro tools, all free and client-side:
   when low (the low side is never tolerance-softened — cells shut down near
   2500), exact water-swap when high, and salt in monitor, trends, logging,
   and CSV export.
+- **Wildlife & your pool** (Care tab) — humane best practices: escape ramps
+  so frogs/mice/ducklings can get out, morning skimmer checks, a "bee bar" to
+  re-route thirsty bees, waterfowl guidance (with the federal-protection
+  note), cover safety, and a Fix-it protocol for animals in the pool —
+  including the CDC raccoon-droppings exception that chlorine can't fix.
 - **Borates calculator** — the optional 30–50 ppm upgrade, both routes:
   borax + muriatic acid (cheap) or boric acid (pH-neutral, zero fuss), with
   TFP-derived rates, staged-addition instructions, and the pet-safety note.
